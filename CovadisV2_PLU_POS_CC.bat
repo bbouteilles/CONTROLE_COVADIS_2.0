@@ -7,73 +7,56 @@ rem                                        *                               COVAD
 rem                                        *                         (version du %version%)                           *
 rem                                        ****************************************************************************
 
-rem rÈalisÈ pour la DDT d'IsËre, par Florian Luys - Stage de fin d'Ètude en Master 2 gÈomatique ‡ l'UniversitÈ de Montpellier 2 et 3. (mars/ao˚t 2014)
-set version=28/08/2014
+rem ===============================================================================================================================================================
+rem VERSIONS DU SCRIPT
+rem ===============================================================================================================================================================
+
+
+rem set version=06/10/2014
+rem script r√©alis√© pour la DDT d'Is√®re, par Florian Luys - Stage de fin d'√©tude en Master 2 g√©omatique √† l'Universit√© de Montpellier 2 et 3. (mars/ao√ªt 2014)
+
+set version=01/11/2014
+rem modifications de script par Bertrand Bouteilles (DDT Ard√®che)
+rem 	->ajout et utilisation dans le script de la variable d√©partement %dep%
+rem 	->suppression des anciens fichiers liste*.txt situ√©s √† la racine pendant l'initialisation du script
+rem 	->suppression de commentaires doublons (usage DDT / usage local) et de commentaires relatifs √† l'identifiant ID_MAP de la DDT38
+rem 	->ajout du mot cl√©s ELSE dans certaines boucles IF (sinon pb de script avec seven ?)
+rem 	->correction du param√®tre PRECISION dans les fonctions d'import des fichiers dans la bases de donn√©es
+rem 	->export du rapport d'erreur au format html pour am√©liorer la lisibilit√© du rapport, avec ajout de balises dans le fichier rapport
+rem		->cr√©ation et appel dans le script d'un fichier Ini.bat situ√© dans le r√©pertoire ref_docs_prog
+
 rem Test des couches via postgresql 9.3.4 (64bit) extension postgis 2.0.1.
 rem Import des couches dans postgresql via OGR2OGR de la bibbliotheque GDAL/OGR 1.10.0
 rem Export des couches erreurs topo via PSQL2SHP
 rem Requetes SQL sur les couches via PSQL
 rem ouverture des couches via QGIS 2.0 (ou programme par defaut)
 
-rem dÈsactiver l'affichage des commandes :
+rem d√©sactiver l'affichage des commandes :
 @echo off 
-rem remise ‡ blanc de l'Ècran :
+rem remise √† blanc de l'√©cran :
 cls
+
+rem ===============================================================================================================================================================
+rem *DEFINITION AUTO DU CHEMIN DU DOSSIER RACINE DU BATCH (%cd%) 
+rem ===============================================================================================================================================================
+set WORKING_DIRECTORY=%cd%
 
 rem ===============================================================================================================================================================
 rem *PARAMETRAGE POSTGIS :
 rem ===============================================================================================================================================================
 rem 1- Creer la base de Controle_COVADIS dans pgadmin (creer schema si different de public).
-rem 2- Lancer le batch Config_postgis__2.0.bat pour crÈer les fichiers de reference en ayant paramÈtrÈ le batch au prÈalable (chemin vers base, applis et couches section).
+rem 2- Lancer le batch Config_postgis__2.0.bat pour cr√©er les fichiers de reference en ayant param√©tr√© le batch au pr√©alable (chemin vers base, applis et couches section).
 
 rem ===============================================================================================================================================================
 rem **PARAMETRES DE CONNEXION A LA BASE :
 rem ===============================================================================================================================================================
-rem **Definir le chemin d'acces ‡ la base dans pgpass.conf ds le repertoire AppData du User de la machine (faire une recherche car rep cachÈ): "host:port:base:user:pass"
+rem **Definir le chemin d'acces √† la base dans pgpass.conf ds le repertoire AppData du User de la machine (faire une recherche car rep cach√©): "host:port:base:user:pass"
 rem et ici :
-set host= localhost
-set user= postgres
-set port= 5432
-set base= controle_COVADIS
-set pass= motdepasseasaisir
-rem set schema= (‡ dÈfinir si schema diffÈrent de public + modif dans import OGR2OGR (active_schema=...) ET dans les requetes SQL (nomschema.)nomtable)
+
+call %cd%/ref_docs_prog/Ini.bat
 
 rem ===============================================================================================================================================================
-rem ***CHEMINS VERS APPLICATIONS :
-rem ===============================================================================================================================================================
-rem ***DEFINIR** CHEMIN OGR2OGR (import des couches):
-rem maison
-rem set OGR="C:\OpenGeo\pgsql\bin\ogr2ogr.exe"
-rem CG
-rem set OGR="C:\Program Files\QGIS Valmiera\bin\ogr2ogr.exe"
-rem DDT
-set OGR="C:\OSGeo4W64\bin\ogr2ogr.exe"
-
-rem ***DEFINIR** CHEMIN PSQL (requetes sql):
-rem maison
-rem set PSQL="C:\OpenGeo\pgsql\bin\psql.exe" 
-rem CG
-rem set PSQL="C:\Program Files\PostgreSQL\9.2\bin\psql.exe"
-rem DDT
-set PSQL= "C:\Program Files\PostgreSQL\9.3\bin\psql.exe" 
-
-rem ***DEFINIR** CHEMIN PGSQL2SHP (export couches erreurs):
-rem maison
-rem set PGSHP= "C:\OSGeo4W64\bin\pgsql2shp.exe" 
-rem CG
-rem set PGSHP="C:\Program Files\PostgreSQL\9.2\bin\pgsql2shp.exe"
-rem DDT
-set PGSHP= "C:\Program Files\PostgreSQL\9.3\bin\pgsql2shp.exe" 
-
-rem ***DEFINIR** CHEMIN QGIS : (abandon si qgis fichier par defaut pr .shp/.tab/.mif) nÈcÈssaire pour ouvrir plusieurs couches en mÍme temps MAIS quitte le batch...
-rem maison
-set QGIS="C:\OSGeo4W64\bin\qgis-dev.bat" 
-rem CG
-rem set QGIS="C:\Program Files\QGIS Valmiera\bin\qgis.bat"
-rem DDT
-rem set QGIS= "C:\Program Files\QGIS\bin\qgis.bat" 
-rem ===============================================================================================================================================================
-rem Message de dÈpart :
+rem Message de d√©part :
 echo.
 echo.
 echo.
@@ -83,7 +66,7 @@ echo             *                                                           *
 echo             *                         PLU/POS/CC                        *
 echo             *                                                           *
 echo             *                        COVADIS V2.0                       *
-echo             *                  (version du %version%)                  *
+echo             *                  (version du %version%)                   *
 echo             *************************************************************
 echo.
 echo.
@@ -93,17 +76,18 @@ rem ============================================================================
 rem ****PARAMETRAGE DU BATCH :
 rem ===============================================================================================================================================================
 rem ===============================================================================================================================================================
-rem 00- Module pour dÈterminer les variables %insee%/%doc%/%datapro%/%referentiel%/%auteur% ‡ l'aide d'un formulaire :
+rem 00- Module pour d√©terminer les variables %insee%/%doc%/%datapro%/%referentiel%/%auteur% √† l'aide d'un formulaire :
 rem ===============================================================================================================================================================
-rem activation de l'extension de variables d'environnement retardÈes (permet de vÈrifer les variables rentrÈes par le controleur):
+rem activation de l'extension de variables d'environnement retard√©es (permet de v√©rifer les variables rentr√©es par le controleur):
 setlocal enableDelayedExpansion
 
+
 rem --ACTIVER ou DESACTIVER le formulaire pour les variables %insee% %doc% %datapro% avec "rem" et "set"
-rem "set" determine une variable, le "/p" permet de demander le retour de la variable par le controleur, le "/a" determine une variable rÈsultante d'un calcul :
+rem "set" determine une variable, le "/p" permet de demander le retour de la variable par le controleur, le "/a" determine une variable r√©sultante d'un calcul :
 :insee
 echo.
 echo.
-set /p insee= "Quel est le numero INSEE de la commune ? (38XXX): "
+set /p insee= "Quel est le numero INSEE de la commune ? (XXXXX): "
 rem set insee=
 if "%insee%"=="" goto insee
 set long_insee=-1
@@ -112,6 +96,7 @@ set /a long_insee+=1
 set test1=!insee:~%long_insee%,1!
 if not "%test1%"=="" goto long1
 if %long_insee% equ 5 (
+
 goto doc
 )
 goto insee
@@ -147,45 +132,45 @@ goto suite
 )
 goto datapro
 
+
 :suite
 echo.
- set /p referentiel="Quel est le referentiel ?(PCI/IGN/NC): "
-rem set referentiel=PCI    
+set /p referentiel="Quel est le referentiel ?(PCI/IGN/NC): "
 echo.            
- set /p auteur= "Auteur du controle ?(Nom+DDT/CG38): "
-rem set auteur= DDT38 Florian Luys
+set /p auteur= "Auteur du controle ?(Nom+DDT/CG): "
+rem set auteur= DDT
+
+rem variable d√©partement issue de la saisie du num√©ro insee
+set dep=0%insee:~0,2%
 
 rem variable automatique de la date du jour :
-rem avec les "/"
+rem date du type JJ/MM/AAAA
 set datcontrol1=%date%
-rem sans les "/"
-set datcontrol2=%date:/=%
+rem date du type AAAMMJJ
+set datcontrol2=%date:~6,4%%date:~3,2%%date:~0,2%
 cls
-rem affichage rÈcap avec les variables rentrÈes :
+rem affichage r√©cap avec les variables rentr√©es :
 echo.
 echo.
-echo La commune a pour code insee : %insee%
+echo Le numero du departement est : %dep%
+echo Le code insee de la commune est : %insee%
 echo Le type de document d'urbanisme est : %doc% 
 echo La date d'approbation est : %datapro%
+
 echo.
-rem arrÍt puis reprise du batch apres confirmation du contrÙleur :
+rem arr√™t puis reprise du batch apres confirmation du contr√¥leur :
 set /p variables="Confirmer les variables en entree ? (o/n) : "
 IF "%variables%"=="o" (goto variableOK) else goto insee
 
-: variableOK
+:variableOK
 cls
 rem ===============================================================================================================================================================
-rem 01 - Module des chemins du rÈpertoire de travail ("Controle_conformite_COVADIS_V2)
+rem 01 - Module des chemins du r√©pertoire de travail ("Controle_conformite_COVADIS_V2)
 rem ===============================================================================================================================================================
 rem *CHEMIN DU RAPPORT(%rappconf%) par defaut dans repertoire de travail
 rem ===============================================================================================================================================================
-rem chaque ligne suivie de ">> %rappconf%" est inscrite dans le rapport(">" inscrite en Ècrasant les lignes precedentes)
-set rappconf=%insee%_Rapport_conformite_%datcontrol2%.txt
-
-rem ===============================================================================================================================================================
-rem *DEFINITION AUTO DU CHEMIN DU DOSSIER RACINE DU BATCH (%cd%) 
-rem ===============================================================================================================================================================
-set WORKING_DIRECTORY=%cd%
+rem chaque ligne suivie de ">> %rappconf%" est inscrite dans le rapport(">" inscrite en √©crasant les lignes precedentes)
+set rappconf=%insee%_Rapport_conformite_%datcontrol2%.html
 
 rem ----------------------------------------------------
 rem variables pour parcourir l'arborescence du dossier :
@@ -204,238 +189,243 @@ set ET=%cd%\Erreurs_topo
 set ES=%cd%\Erreurs_structure
 set SQL=%cd%\ref_docs_prog\SQL
 
+
 rem ===============================================================================================================================================================
 rem *!*EN SUSPENS*!***DEFINIR CHEMIN DE LA COUCHE DE REF POUR LA COMMUNE (pour verification de la projection) : ... code pr ouvrir deux couches dans QGIS avec "call" sans fermer le batch
 rem ===============================================================================================================================================================
- set COM=%cd%\ref_docs_prog\ref_cadastre\PCI\N_SECTION_DGI_038.shp  
+set COM=%cd%\ref_docs_prog\ref_cadastre\PCI\SECTION_CADASTRALE.shp  
 
 
 rem                                   ===================================================================================
-rem suppression des fichiers prÈsents dans erreurs_structure et erreurs_topo
+rem suppression des fichiers pr√©sents dans erreurs_structure et erreurs_topo
 del /Q/S "%ES%\*.*"
 del /Q/S "%ET%\*.*"
+
+rem                                   ===================================================================================
+rem suppression des fichiers Liste* et de l'ancien rapport de conformit√© pr√©sents dans le r√©pertoire racine
+del /Q/S ".\Liste*.*"
+del /Q/S ".\*Rapport_conformite*.*"
+
 
 rem DEBUT CONTROLE DES FICHIERS LIVRES :
 rem *INFO* : chaque ligne "echo" affiche la chaine qui suit dans la console. si la ligne est suivie de ">> %rappconf%", la chaine est inscrite dans le rapport.
 rem ===============================================================================================================================================================
-echo ________________________________________________________________________________ > %rappconf%
-echo "                CONTROLE DE CONFORMITE AU STANDARD COVADIS V2.0               " >> %rappconf%
-echo "                        DES DONNEES DE LA COMMUNE %insee%                       " >> %rappconf%
-echo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""" >> %rappconf%
-echo version du %version%
+echo. >> %rappconf%
+echo ^<html^> >> %rappconf%
+echo ^<head^> >> %rappconf%
+echo ^<meta content="text/html; charset=UTF-8" http-equiv="Content-Type"^>  >> %rappconf%
+echo ^</head^> >> %rappconf%
+echo ^<body^> >> %rappconf%
+echo ^</br^> >> %rappconf%
+echo ^<div align="center"^> ^<h1^> Contr√¥le de conformit√© au standard Covadis V2.0 >> %rappconf%
+echo ^</br^>Commune n¬∞ : %insee%^</h1^>  >> %rappconf%
+echo  ---  >> %rappconf%
+echo ^</br^>^<b^>Version du %version%^</b^>
 echo.
-echo EffectuÈ le %datcontrol1% par %auteur% >> %rappconf%
+echo ^</br^>Contr√¥le effectu√© le %datcontrol1% par %auteur% ^</div^> >> %rappconf%
 echo.>> %rappconf%
-echo GÈostandards COVADIS disponibles sur : >> %rappconf%
-echo               http://archives.cnig.gouv.fr/Front/index.php?RID=120 >> %rappconf%
+echo G√©ostandards Covadis disponibles sur : ^<a href="http://archives.cnig.gouv.fr/Front/index.php?RID=120^> >> %rappconf%
 echo.>> %rappconf%
-echo ATTENTION : Le prÈsent contrÙle n'intËgre pas la vÈrification du contenu des >> %rappconf%
-echo             donnÈes attributaires des tables, ni de la bonne reprise des objets>> %rappconf%
-echo             figurant sur le plan papier opposable.>> %rappconf%
+echo ^</br^>^<font color="red"^>ATTENTION : Le pr√©sent contr√¥le n'int√®gre pas la v√©rification du contenu des >> %rappconf%
+echo ^</br^>donn√©es attributaires des tables, ni de la bonne reprise des objets>> %rappconf%
+echo ^</br^>figurant sur le plan papier opposable.^</font^> >> %rappconf%
 echo.>> %rappconf%
-echo """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""" >> %rappconf%
 echo.>> %rappconf%
 cls
 echo.
 
 rem ===============================================================================================================================================================--
-rem I- Module de contrÙle de l'arborescence : prÈsence selon nommage des rÈpertoires
+rem I- Module de contr√¥le de l'arborescence : pr√©sence selon nommage des r√©pertoires
 rem ===============================================================================================================================================================--
 echo Controle arborescence...
-echo ---------------************************************************----------------->> %rappconf%
-echo                  CONTROLE DE L'ARBORESCENCE DES REPERTOIRES : >> %rappconf%
-echo ---------------************************************************----------------->> %rappconf%
+echo ^<blockquote ^> ^<h2^>1. Contr√¥le de l'arborescence des r√©pertoires^</h2^>^</blockquote ^>  >> %rappconf%
 echo. >> %rappconf%
 rem ===============================================================================================================================================================
-rem 1.1 EXISTENCE DE 38XXX_DOC_AAAAMMJJ :
+rem 1.1 EXISTENCE DE XXXXX_DOC_AAAAMMJJ :
 rem ===============================================================================================================================================================
-echo EXISTENCE DE %insee%_%doc%_%datapro% : >> %rappconf%
-echo -------------------------------------------------------------------------------->> %rappconf%
+echo ^<blockquote ^> ^<h3^>1.1 R√©pertoire principal %insee%_%doc%_%datapro%^</h3^>^</blockquote ^>  >> %rappconf%
+
 for /f "delims=" %%a in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\%insee%_%doc%_%datapro%"') do (
 set chem=%%a
 goto Exist
 )
 mkdir "%doss%\%insee%_%doc%_%datapro%"
-echo ---ERREUR -Le rÈpertoire %insee%_%doc%_%datapro% n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>%insee%_%doc%_%datapro%^</i^> n'a pas √©t√© cr√©√©. ^</font^>^</br^>   >> %rappconf%
 goto Fin
-: Exist
-echo CONFORME -Le rÈpertoire %insee%_%doc%_%datapro% existe. >> %rappconf%
+:Exist
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>%insee%_%doc%_%datapro%^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem%" "%doss%"  
-: Fin
+:Fin
 echo. >> %rappconf%
 echo. >> %rappconf%
 
-rem ===============================================================================================================================================================
-echo EXISTENCE DES SOUS-REPERTOIRES DE %insee%_%doc%_%datapro% : >> %rappconf%
-echo -------------------------------------------------------------------------------->> %rappconf%
-rem ===============================================================================================================================================================
-rem 1.2 EXISTENCE DE Pieces_ecrites :
-rem ===============================================================================================================================================================
-echo *Pieces_ecrites : >> %rappconf%
-echo.>> %rappconf%
-for /f "delims=" %%b in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\Pieces_ecrites"') do (
-set chem1=%%b
-goto Exist1
-)
-mkdir "%plu%\Pieces_ecrites"
-echo ---ERREUR -Le rÈpertoire Pieces_ecrites n'a pas ÈtÈ crÈÈ. >> %rappconf%
-goto Fin1
-: Exist1
-echo CONFORME -Le rÈpertoire Pieces_ecrites existe. >> %rappconf%
-move "%chem1%" "%plu%" 
-: Fin1
-echo. >> %rappconf%
 
 rem ===============================================================================================================================================================
-rem 1.3 EXISTENCE DE Donnees_geographiques :
+rem 1.2 EXISTENCE DE Donnees_geographiques :
 rem ===============================================================================================================================================================
-echo *Donnees_geographiques : >> %rappconf%
+echo ^<blockquote ^> ^<h3^>1.2  R√©pertoire Donn√©es g√©ographiques^</h3^>^</blockquote ^>  >> %rappconf%
 echo.>> %rappconf%
 for /f "delims=" %%c in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\Donnees_geographiques"') do (
 set chem2=%%c
 goto Exist2
 )
 mkdir "%plu%\Donnees_geographiques"
-echo ---ERREUR -Le rÈpertoire Donnees_geographiques n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>Donnees_geographiques^</i^> n'a pas √©t√© cr√©√©.  ^</font^>^</br^>   >> %rappconf%
 goto Fin2
-: Exist2
-echo CONFORME -Le rÈpertoire Donnees_geographiques existe. >> %rappconf%
+:Exist2
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>Donnees_geographiques^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem2%" "%plu%"
-: Fin2
+:Fin2
 echo. >> %rappconf%
 echo. >> %rappconf%
 
 rem ===============================================================================================================================================================
-echo EXISTENCE DES SOUS-REPERTOIRES DE Pieces_ecrites : >> %rappconf%
-echo -------------------------------------------------------------------------------->> %rappconf%
+rem 1.3 EXISTENCE DE Pieces_ecrites :
 rem ===============================================================================================================================================================
-rem 1.4 1_Rapport_de_presentation (PLU/POS+CC)
+echo ^<blockquote ^> ^<h3^>1.3 R√©pertoire Pi√®ces √©crites^</h3^>^</blockquote ^>  >> %rappconf%
+echo.>> %rappconf%
+for /f "delims=" %%b in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\Pieces_ecrites"') do (
+set chem1=%%b
+goto Exist1
+)
+mkdir "%plu%\Pieces_ecrites"
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>Pieces_ecrites^</i^> n'a pas √©t√© cr√©√©.  ^</font^>^</br^> >> %rappconf%
+goto Fin1
+:Exist1
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>Pieces_ecrites^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
+move "%chem1%" "%plu%" 
+:Fin1
+echo. >> %rappconf%
+
+
 rem ===============================================================================================================================================================
-echo *1_Rapport_de_presentation : >> %rappconf%
+rem 1.3.1 1_Rapport_de_presentation (PLU/POS+CC)
+rem ===============================================================================================================================================================
+echo ^<blockquote ^> ^<h4^>1.3.1 Sous-r√©pertoire 1_Rapport_de_presentation^</h4^>^</blockquote ^>  >> %rappconf%
 echo.>> %rappconf%
 for /f "delims=" %%d in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\1_Rapport_de_presentation"') do (
 set chem3=%%d
 goto Exist3
 )
 mkdir "%pe%\1_Rapport_de_presentation"
-echo ---ERREUR -Le rÈpertoire 1_Rapport_de_presentation n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>1_Rapport_de_presentation^</i^> n'a pas √©t√© cr√©√©. ^</font^>^</br^>   >> %rappconf%
 goto Fin3
-: Exist3
-echo CONFORME -Le rÈpertoire 1_Rapport_de_presentation existe. >> %rappconf%
+:Exist3
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>1_Rapport_de_presentation^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem3%" "%pe%"
-: Fin3
+:Fin3
 echo. >> %rappconf%
 
 rem renvoi si CC :
 IF "%doc%"=="CC" goto  AnnexesCC
 rem ===============================================================================================================================================================
-rem 1.5 2_PADD
+rem 1.3.2 2_PADD
 rem ===============================================================================================================================================================
-echo *2_PADD : >> %rappconf%
+echo ^<blockquote ^> ^<h4^>1.3.2 Sous-r√©pertoire 2_PADD^</h4^>^</blockquote ^>  >> %rappconf%
 echo.>> %rappconf%
 for /f "delims=" %%e in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\2_PADD"') do (
 set chem4=%%e
 goto Exist4
 )
 mkdir "%pe%\2_PADD"
-echo ---ERREUR -Le rÈpertoire 2_PADD n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>2_PADD^</i^> n'a pas √©t√© cr√©√©. ^</font^>^</br^>   >> %rappconf%
 goto Fin4
-: Exist4
-echo CONFORME -Le rÈpertoire 2_PADD existe. >> %rappconf%
+:Exist4
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>2_PADD^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem4%" "%pe%"
-: Fin4
+:Fin4
 echo. >> %rappconf%
 
 rem ===============================================================================================================================================================
-rem 1.6 3_Reglement
+rem 1.3.3 3_Reglement
 rem ===============================================================================================================================================================
-echo *3_Reglement : >> %rappconf%
+echo ^<blockquote ^> ^<h4^>1.3.3 Sous-r√©pertoire 3_Reglement^</h4^>^</blockquote ^>  >> %rappconf%
 echo.>> %rappconf%
 for /f "delims=" %%f in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\3_Reglement"') do (
 set chem5=%%f
 goto Exist5
 )
 mkdir "%pe%\3_Reglement"
-echo ---ERREUR -Le rÈpertoire 3_Reglement n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>3_Reglement^</i^> n'a pas √©t√© cr√©√©. ^</font^>^</br^>   >> %rappconf%
 goto Fin5
-: Exist5
-echo CONFORME -Le rÈpertoire 3_Reglement existe. >> %rappconf%
+:Exist5
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>3_Reglement^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem5%" "%pe%"
-: Fin5
+:Fin5
 echo. >> %rappconf%
 
 rem ===============================================================================================================================================================
-rem 1.7 4_Annexes
+rem 1.3.4 4_Annexes
 rem ===============================================================================================================================================================
-echo *4_Annexes : >> %rappconf%
+echo ^<blockquote ^> ^<h4^>1.3.3 Sous-r√©pertoire 4_Annexes^</h4^>^</blockquote ^>  >> %rappconf%
 echo.>> %rappconf%
 for /f "delims=" %%g in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\4_Annexes"') do (
 set chem6=%%g
 goto Exist6
 )
 mkdir "%pe%\4_Annexes"
-echo ---ERREUR -Le rÈpertoire 4_Annexes n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>4_Annexes^</i^> n'a pas √©t√© cr√©√©. ^</font^>^</br^>   >> %rappconf%
 goto Fin6
-: Exist6
-echo CONFORME -Le rÈpertoire 4_Annexes existe. >> %rappconf%
+:Exist6
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>4_Annexes^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem6%" "%pe%"
-: Fin6
+:Fin6
 echo. >> %rappconf%
 goto Ordoss
 
 rem ===============================================================================================================================================================
-rem 1.7bis 2_Annexes (CC)
+rem 1.3.4 bis 2_Annexes (CC)
 rem ===============================================================================================================================================================
 :AnnexesCC
-echo *2_Annexes : >> %rappconf%
+echo ^<blockquote ^> ^<h4^>1.3.3 Sous-r√©pertoire 2_Annexes^</h4^>^</blockquote ^>  >> %rappconf%
 echo.>> %rappconf%
 for /f "delims=" %%g in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\2_Annexes"') do (
 set chem6bis=%%g
 goto Exist6bis
 )
 mkdir "%pe%\2_Annexes"
-echo ---ERREUR -Le rÈpertoire 2_Annexes n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>2_Annexes^</i^> n'a pas √©t√© cr√©√©. ^</font^>^</br^>   >> %rappconf%
 goto Fin8
-: Exist6bis
-echo CONFORME -Le rÈpertoire 2_Annexes existe. >> %rappconf%
+:Exist6bis
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>2_Annexes^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem6bis%" "%pe%"
 goto Fin8
 
 :Ordoss
 rem ===============================================================================================================================================================
-rem 1.8 5_Orientations_amenagement
+rem 1.3.5 5_Orientations_amenagement
 rem ===============================================================================================================================================================
-echo *5_Orientations_amenagement : >> %rappconf%
+echo ^<blockquote ^> ^<h4^>1.3.4 Sous-r√©pertoire 5_Orientations_amenagement^</h4^>^</blockquote ^>  >> %rappconf%
 echo.>> %rappconf%
 for /f "delims=" %%h in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\5_Orientations_amenagement"') do (
 set chem7=%%h
 goto Exist7
 )
 mkdir "%pe%\5_Orientations_amenagement"
-echo ---ERREUR -Le rÈpertoire 5_Orientations_amenagement n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>5_Orientations_amenagement^</i^> n'a pas √©t√© cr√©√©. ^</font^>^</br^>   >> %rappconf%
 goto Fin7
-: Exist7
-echo CONFORME -Le rÈpertoire 5_Orientations_amenagement existe. >> %rappconf%
+:Exist7
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>5_Orientations_amenagement^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem7%" "%pe%"
-: Fin7
+:Fin7
 echo. >> %rappconf%
 
 rem ===============================================================================================================================================================
-rem 1.9 6_Documents_graphiques
+rem 1.3.6 6_Documents_graphiques
 rem ===============================================================================================================================================================
-echo *6_Documents_graphiques (optionnel): >> %rappconf%
+echo ^<blockquote ^> ^<h4^>1.3.5 Sous-r√©pertoire 6_Documents_graphiques (optionnel)^</h4^>^</blockquote ^>  >> %rappconf%
 echo.>> %rappconf%
 for /f "delims=" %%p in ('dir /s /b /ad "%doss%" 2^>nul ^| findstr /i "\6_Documents_graphiques"') do (
 set chem8=%%p
 goto Exist8
 )
 mkdir "%pe%\6_Documents_graphiques"
-echo Optionnel -Le rÈpertoire 6_Documents_graphiques n'a pas ÈtÈ crÈÈ. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le r√©pertoire ^<i^>6_Documents_graphiques^</i^> n'a pas √©t√© cr√©√©. ^</font^>^</br^>   >> %rappconf%
 goto Fin8
-: Exist8
-echo CONFORME -Le rÈpertoire 6_Documents_graphiques existe. >> %rappconf%
+:Exist8
+echo ^<font color="green"^>CONFORME : le r√©pertoire ^<i^>6_Documents_graphiques^</i^> existe.  ^</font^>^</br^>  >> %rappconf%
 move "%chem8%" "%pe%"
-: Fin8
+:Fin8
 echo. >> %rappconf%
 echo. >> %rappconf%
 cls
@@ -451,21 +441,16 @@ echo.
 echo %arbo% Erreur(s)
 IF %arbo%==0 goto arbo1
 IF not %arbo%==0 goto arbo2
-: arbo1
+:arbo1
 echo --------------------------------------------------------------------------------
-echo                                                 ********************************>> %rappconf%
-echo                                                      Arborescence : CONFORME>> %rappconf%
-echo                                                 ********************************>> %rappconf%
+echo ^<font color="green"^>^<h2^>^<div align="center"^>^<u^>Arborescence : CONFORME^</u^>^</h2^>^</div align="center"^> ^</font^>^</br^>  >> %rappconf%
 echo *Arborescence : CONFORME*
 goto arbo3
-: arbo2
+:arbo2
 echo --------------------------------------------------------------------------------
-echo                                                 ********************************>> %rappconf%
-echo                                                    Arborescence : NON CONFORME>> %rappconf%
-echo                                                                   %arbo% Erreur(s)>> %rappconf%
-echo                                                 ********************************>> %rappconf%
+echo ^<font color="red"^>^<h2^>^<div align="center"^>^<u^>Arborescence : NON CONFORME^</u^>^</h2^>^</div align="center"^> ^</font^>^</br^>  >> %rappconf%
 echo *Arborescence : NON CONFORME*
-: arbo3
+:arbo3
 echo. >> %rappconf%
 echo.
 echo ...fin
@@ -487,37 +472,38 @@ echo.
 set /p choix="(1 ou 2 ou 3) : "
 
 if /I "%choix%"=="1" (
-echo ---ATTENTION: Le controle des donnÈes gÈographiques n'a pas ÈtÈ effectuÈ.>> %rappconf%
+echo ^<font color="blue"^>ATTENTION : Le controle des donn√©es g√©ographiques n'a pas √©t√© effectu√©.^</font^>^</br^>  >> %rappconf%
 echo. >> %rappconf%
 goto DebutControlePDF
 )
 if /I "%choix%"=="2" (
-echo ---ATTENTION: Le controle des pdf n'a pas ÈtÈ effectuÈ.>> %rappconf%
+echo ^<font color="blue"^>ATTENTION : Le controle des pdf n'a pas √©t√© effectu√©.^</font^>^</br^>  >> %rappconf%
 echo. >> %rappconf%
 goto DebutControleDG
 )
 if /I "%choix%"=="3" (goto DebutControlePDF)
 goto question
-rem ===============================================================================================================================================================
-
 
 :DebutControlePDF
+
 rem ===============================================================================================================================================================
-rem II- Module de contrÙle des PDF 
 rem ===============================================================================================================================================================
+rem II- Module de contr√¥le des PDF 
+rem ===============================================================================================================================================================
+
 cls
 echo Controle des PDF...
-echo ---------------------------**********************------------------------------->> %rappconf%
-echo                              CONTROLE DES PDF : >> %rappconf%
-echo ---------------------------**********************------------------------------->> %rappconf%
+echo ^<blockquote ^> ^<h2^>2. Contr√¥le des fichiers pdf^</h2^>^</blockquote ^>  >> %rappconf%
 echo. >> %rappconf%
+
 rem ===============================================================================================================================================================
 rem 2.0 Detection des PDF (listePDF)
 rem ===============================================================================================================================================================
-rem extraction de la liste des pdf livrÈs :
+
+rem extraction de la liste des pdf livr√©s :
 dir n/b/s %doss%\*.pdf > liste_pdf_%insee%.txt
 
-rem Compte les pdf livrÈs :
+rem Compte les pdf livr√©s :
 for /F "usebackq" %%r in (`type liste_pdf_%insee%.txt ^|find /c ".pdf"`) do (
 set pdf0=%%r
 )
@@ -529,28 +515,24 @@ cls
 echo Controle des PDF...
 echo.
 echo ...Aucun pdf detectes !
-echo ***ERREURpdf -Aucun pdf n'a ÈtÈ livrÈs. >> %rappconf%
+echo ^<font color="red"^>ERREUR : Aucun pdf n'a √©t√© livr√©. ^</font^>^</br^>   >> %rappconf%
 del liste_pdf_%insee%.txt
 goto BilanPDF
 
-: PDF
-echo --------------------- >> %rappconf% 
-echo LISTE DES PDF LIVRES: >> %rappconf% 
-rem extraction de la liste des pdf livrÈs avec nomfichier + extension (parametre ~nx):
+:PDF
+echo Liste des fichiers pdf livr√©s : >> %rappconf% 
+rem extraction de la liste des pdf livr√©s avec nomfichier + extension (parametre ~nx):
 for /F %%s in ('type liste_pdf_%insee%.txt^|find /i ".pdf"') do (
-echo    %%~nxs >> %rappconf%
+echo    ^<blockquote ^> %%~nxs ^</blockquote ^> >> %rappconf%
 echo    %%~nxs >> liste_nom_pdf_%insee%.txt
 )
-echo --------------------- >> %rappconf% 
-rem ===============================================================================================================================================================
-
-
 
 rem ===============================================================================================================================================================
-rem 2.1.0 CONTROLE 38XXX_rapport_AAAAMMJJ :
+rem 2.1.0 CONTROLE XXXXX_rapport_AAAAMMJJ :
 rem ===============================================================================================================================================================
+
 echo.>> %rappconf%
-echo **%insee%_rapport_%datapro%.pdf :>> %rappconf%
+echo ^<blockquote ^> ^<h3^>2.1 %insee%_rapport_%datapro%.pdf^</h3^>^</blockquote^>  >> %rappconf%
 echo.>> %rappconf%
 rem recherche dans les noms des pdf "rapport":
 for /f %%j in ('type liste_pdf_%insee%.txt ^| find /i "rapport"') do (
@@ -562,14 +544,16 @@ IF EXIST "%pdfRa%" (
 goto RaOK
 ) else goto ConcatRa
 rem si oui conforme sinon test concatenage et nommage:
-: RaOK
-echo CONFORME -Le pdf %insee%_rapport_%datapro% a bien ÈtÈ livrÈ.>> %rappconf%
+:RaOK
+echo ^<font color="green"^>CONFORME : le pdf %insee%_rapport_%datapro% a bien √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto OpenRa
+
 rem ===============================================================================================================================================================
-rem 2.1.1 NOMMAGE et CONCATENAGE %insee%_rapport_%datapro%.pdf 
+rem 2.1.1 NOMMAGE et CONCATENAGE  XXXXX_rapport_AAAAMMJJ 
 rem ===============================================================================================================================================================
-: ConcatRa
+
+:ConcatRa
 rem compte des pdf avec "rapport":
 for /f %%q in ('type liste_nom_pdf_%insee%.txt ^| find /i /c "rapport"') do (
 set NumRa=%%q
@@ -583,38 +567,40 @@ for /F %%s in ('type liste_nom_pdf_%insee%.txt^|find /i "rapport"') do echo    %
 set /p concat1="Faut-il proposer la concatenation dans le rapport ? (o/n) : ")
 rem question si oui il faut les concatener message dans rapport et passage au suivant sinon test nommage:
 IF "%concat1%"=="o" (
-echo ---ERREURpdf -Le pdf est ‡ concatÈner et ‡ renommer : %insee%_rapport_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† concat√©ner et √† renommer : %insee%_rapport_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo.>> %rappconf%
 goto FinRa
 )
 rem test nommage :
-: NomRa
+:NomRa
 IF EXIST  "%Ra%\*rapport*.pdf" (
-echo ---ERREURpdf -Le pdf est ‡ renommer : %insee%_rapport_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† renommer : %insee%_rapport_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinRa
 ) else (
-echo ---ERREURpdf -Le pdf %insee%_rapport_%datapro% n'a pas ÈtÈ livrÈ.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_rapport_%datapro% n'a pas √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinRa
 )
+
 rem ===============================================================================================================================================================
-rem 2.1.2 OUVERTURE DU PDF 38XXX_rapport_AAAAMMJJ :
+rem 2.1.2 OUVERTURE DU PDF XXXXX_rapport_AAAAMMJJ :
 rem ===============================================================================================================================================================
-: OpenRa
+
+:OpenRa
 cls
 echo Controle des PDF...
-rem ouvrir si pdf dÈtectÈ :
+rem ouvrir si pdf d√©tect√© :
 set /p pdfRap= "Le pdf %insee%_rapport_%datapro% a bien ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des PDF...
 IF "%pdfRap%"=="o" (goto ORA) else goto FinRa
-: ORA
+:ORA
 rem ouverture du pdf :
  "%pdfRa%" /cmd
 set /p Raprob= "%insee%_rapport_%datapro% s'ouvre-t-il ? (o/n) : "
 IF "%Raprob%"=="n" (
-echo ---ERREURpdf -Le pdf %insee%_rapport_%datapro% ne s'ouvre pas. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_rapport_%datapro% ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 ) 
 cls
@@ -626,21 +612,19 @@ echo Controle des PDF...
 IF "%index1%"=="n" (goto index1) else goto FinRa
 :index1
 echo.>> %rappconf% 
-echo          ---- Le pdf du rapport de presentation n'est pas indexÈ. >> %rappconf% 
-: FinRa
+echo ^<font color="red"^>ERREUR : le pdf du rapport de presentation n'est pas index√©.  ^</font^>^</br^>   >> %rappconf% 
+:FinRa
 cls
 echo Controle des PDF...
 rem ===============================================================================================================================================================
 rem renvoi si "CC":
 IF "%doc%"=="CC" goto AnCC
 
-
-
 rem ===============================================================================================================================================================
-rem 2.2.0 CONTROLE 38XXX_padd_AAAAMMJJ :
+rem 2.2.0 CONTROLE XXXXX_padd_AAAAMMJJ :
 rem ===============================================================================================================================================================
 echo.>> %rappconf%
-echo **%insee%_padd_%datapro%.pdf :>> %rappconf%
+echo ^<blockquote ^> ^<h3^>2.2 %insee%_padd_%datapro%.pdf^</h3^>^</blockquote^>  >> %rappconf%
 echo.>> %rappconf%
 
 rem recherche dans les noms des pdf "padd":
@@ -653,14 +637,16 @@ IF EXIST "%pdfPa%" (
 goto PaOK
 ) else goto ConcatPa
 rem si oui conforme sinon test concatenage et nommage:
-: PaOK
-echo CONFORME -Le pdf %insee%_padd_%datapro% a bien ÈtÈ livrÈ.>> %rappconf%
+:PaOK
+echo ^<font color="green"^>CONFORME : le pdf %insee%_padd_%datapro% a bien √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto OpenPa
+
 rem ===============================================================================================================================================================
-rem 2.2.1 NOMMAGE et CONCATENAGE %insee%_padd_%datapro%.pdf 
+rem 2.2.1 NOMMAGE et CONCATENAGE XXXXX_padd_AAAAMMJJ
 rem ===============================================================================================================================================================
-: ConcatPa
+
+:ConcatPa
 rem compte des pdf avec "padd":
 for /f %%q in ('type liste_nom_pdf_%insee%.txt ^| find /i /c "padd"') do (
 set NumPa=%%q
@@ -674,40 +660,42 @@ for /F %%s in ('type liste_nom_pdf_%insee%.txt^|find /i "padd"') do echo    %%~n
 set /p concat2="Faut-il proposer la concatenation dans le rapport ? (o/n) : ")
 rem question si oui il faut les concatener message dans rapport et passage au suivant sinon test nommage:
 IF "%concat2%"=="o" (
-echo ---ERREURpdf -Le pdf est ‡ concatÈner et ‡ renommer : %insee%_padd_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† concat√©ner et √† renommer : %insee%_padd_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo.>> %rappconf%
 goto FinPa
 )
 rem test nommage :
-: NomPa
+:NomPa
 IF EXIST  "%Pa%\*padd*.pdf" (
-echo ---ERREURpdf -Le pdf est ‡ renommer : %insee%_padd_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† renommer : %insee%_padd_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinPa
 ) else (
-echo ---ERREURpdf -Le pdf %insee%_padd_%datapro% n'a pas ÈtÈ livrÈ.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_padd_%datapro% n'a pas √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinPa
 )
+
 rem ===============================================================================================================================================================
-rem 2.2.2 OUVERTURE DU PDF 38XXX_padd_AAAAMMJJ :
+rem 2.2.2 OUVERTURE DU PDF XXXXX_padd_AAAAMMJJ :
 rem ===============================================================================================================================================================
-: OpenPa
+
+:OpenPa
 cls
 echo Controle des PDF...
-rem ouvrir si pdf dÈtectÈ :
+rem ouvrir si pdf d√©tect√© :
 set /p pdfPad= "Le pdf %insee%_padd_%datapro% a bien ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des PDF...
 IF "%pdfPad%"=="o" goto OPA
 IF not "%pdfPad%"=="o" goto FinPa
 rem ouverture du pdf :
-: OPA
+:OPA
 rem ouverture du pdf :
  "%pdfPa%" /cmd
 set /p Paprob= "%insee%_padd_%datapro% s'ouvre-t-il ? (o/n) : "
 IF "%Paprob%"=="n" (
-echo ---ERREURpdf -Le pdf %insee%_padd_%datapro% ne s'ouvre pas. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_padd_%datapro% ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 )
 cls
@@ -719,19 +707,17 @@ echo Controle des PDF...
 IF "%index2%"=="n" (goto index2) else goto FinPa
 :index2
 echo.>> %rappconf% 
-echo          ---- Le pdf du PADD n'est pas indexÈ. >> %rappconf% 
-: FinPa
+echo ^<font color="red"^>ERREUR : le pdf du PADD n'est pas index√©.  ^</font^>^</br^>   >> %rappconf% 
+:FinPa
 cls
 echo Controle des PDF...
-rem ===============================================================================================================================================================
-
-
 
 rem ===============================================================================================================================================================
-rem 2.3.0 CONTROLE 38XXX_reglement_AAAAMMJJ :
+rem 2.3.0 CONTROLE XXXXX_reglement_AAAAMMJJ
 rem ===============================================================================================================================================================
+
 echo.>> %rappconf%
-echo **%insee%_reglement_%datapro%.pdf :>> %rappconf%
+echo ^<blockquote ^> ^<h3^>2.2 %insee%_reglement_%datapro%.pdf^</h3^>^</blockquote^>  >> %rappconf%
 echo.>> %rappconf%
 
 rem recherche dans les noms des pdf "reglement":
@@ -744,14 +730,16 @@ IF EXIST "%pdfRe%" (
 goto ReOK
 ) else goto ConcatRe
 rem si oui conforme sinon test concatenage et nommage:
-: ReOK
-echo CONFORME -Le pdf %insee%_reglement_%datapro% a bien ÈtÈ livrÈ.>> %rappconf%
+:ReOK
+echo ^<font color="green"^>CONFORME : le pdf %insee%_reglement_%datapro% a bien √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto OpenRe
+
 rem ===============================================================================================================================================================
-rem 2.3.1 NOMMAGE et CONCATENAGE %insee%_reglement_%datapro%.pdf 
+rem 2.3.1 NOMMAGE et CONCATENAGE XXXXX_reglement_AAAAMMJJ
 rem ===============================================================================================================================================================
-: ConcatRe
+
+:ConcatRe
 rem compte des pdf avec "reglement":
 for /f %%q in ('type liste_nom_pdf_%insee%.txt ^| find /i /c "reglement"') do (
 set NumRe=%%q
@@ -765,39 +753,39 @@ for /F %%s in ('type liste_nom_pdf_%insee%.txt^|find /i "reglement"') do echo   
 set /p concat3="Faut-il proposer la concatenation dans le rapport ? (o/n) : ")
 rem question si oui il faut les concatener message dans rapport et passage au suivant sinon test nommage:
 IF "%concat3%"=="o" (
-echo ---ERREURpdf -Le pdf est ‡ concatÈner et ‡ renommer : %insee%_reglement_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† concat√©ner et √† renommer : %insee%_reglement_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo.>> %rappconf%
 goto FinRe
 )
 rem test nommage :
-: NomRe
+:NomRe
 IF EXIST  "%Re%\*reglement*.pdf" (
-echo ---ERREURpdf -Le pdf est ‡ renommer : %insee%_reglement_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† renommer : %insee%_reglement_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinRe
 ) else (
-echo ---ERREURpdf -Le pdf %insee%_reglement_%datapro% n'a pas ÈtÈ livrÈ.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_reglement_%datapro% n'a pas √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinRe
 )
 rem ===============================================================================================================================================================
-rem 2.3.2 OUVERTURE DU PDF 38XXX_reglement_AAAAMMJJ :
+rem 2.3.2 OUVERTURE DU PDF XXXXX_reglement_AAAAMMJJ
 rem ===============================================================================================================================================================
-: OpenRe
+:OpenRe
 cls
 echo Controle des PDF...
-rem ouvrir si pdf dÈtectÈ :
+rem ouvrir si pdf d√©tect√© :
 set /p pdfReg= "Le pdf %insee%_reglement_%datapro% a bien ete livre. Voulez-vous l'ouvrir ?(o/n): "
 cls
 echo Controle des PDF...
 IF "%pdfReg%"=="o" goto ORE
 IF not "%pdfReg%"=="o" goto FinRe
 rem ouverture du pdf :
-: ORE
+:ORE
  "%pdfRe%" /cmd 
 set /p Reprob= "%insee%_reglement_%datapro% s'ouvre-t-il ? (o/n) : "
 IF "%Reprob%"=="n" (
-echo ---ERREURpdf -Le pdf %insee%_reglement_%datapro% ne s'ouvre pas. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_reglement_%datapro% ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
 goto FinRe
 )
 cls
@@ -809,19 +797,17 @@ echo Controle des PDF...
 IF "%index3%"=="n" (goto index3) else goto FinRe
 :index3
 echo.>> %rappconf% 
-echo          ---ERREURpdf- Le pdf du reglement doit Ítre indexÈ. >> %rappconf% 
-: FinRe
+echo ^<font color="red"^>ERREUR : le pdf du r√®glement n'est pas index√©.  ^</font^>^</br^>   >> %rappconf% 
+:FinRe
 cls
 echo Controle des PDF...
-rem ===============================================================================================================================================================
-
-
 
 rem ===============================================================================================================================================================
-rem 2.4.0 CONTROLE 38XXX_annexes_AAAAMMJJ :
+rem 2.4.0 CONTROLE XXXXX_annexes_AAAAMMJJ
 rem ===============================================================================================================================================================
+
 echo.>> %rappconf%
-echo **%insee%_annexes_%datapro%.pdf :>> %rappconf%
+echo ^<blockquote ^> ^<h3^>2.2 %insee%_annexes_%datapro%.pdf^</h3^>^</blockquote^>  >> %rappconf%
 echo.>> %rappconf%
 
 rem recherche dans les noms des pdf "annexes":
@@ -834,14 +820,14 @@ IF EXIST "%pdfAn%" (
 goto AnOK
 ) else goto ConcatAn
 rem si oui conforme sinon test concatenage et nommage:
-: AnOK
-echo CONFORME -Le pdf %insee%_annexes_%datapro% a bien ÈtÈ livrÈ.>> %rappconf%
+:AnOK
+echo ^<font color="green"^>CONFORME : le pdf %insee%_annexe_%datapro% a bien √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto OpenAn
 rem ===============================================================================================================================================================
-rem 2.4.1 NOMMAGE et CONCATENAGE %insee%_annexes_%datapro%.pdf 
+rem 2.4.1 NOMMAGE et CONCATENAGE XXXXX_annexes_AAAAMMJJ
 rem ===============================================================================================================================================================
-: ConcatAn
+:ConcatAn
 rem compte des pdf avec "annexes":
 for /f %%q in ('type liste_nom_pdf_%insee%.txt ^| find /i /c "annexes"') do (
 set NumAn=%%q
@@ -855,40 +841,40 @@ for /F %%s in ('type liste_nom_pdf_%insee%.txt^|find /i "annexes"') do echo    %
 set /p concat4="Faut-il proposer la concatenation dans le rapport ? (o/n) : ")
 rem question si oui il faut les concatener message dans rapport et passage au suivant sinon test nommage:
 IF "%concat4%"=="o" (
-echo ---ERREURpdf -Le pdf est ‡ concatÈner et ‡ renommer : %insee%_annexes_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† concat√©ner et √† renommer : %insee%_annexes_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo.>> %rappconf%
 goto FinAn
 )
 rem test nommage :
-: NomAn
+:NomAn
 IF EXIST  "%An%\*annexes*.pdf" (
-echo ---ERREURpdf -Le pdf est ‡ renommer : %insee%_annexes_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† renommer : %insee%_annexes_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinAn
 ) else (
-echo ---ERREURpdf -Le pdf %insee%_annexes_%datapro% n'a pas ÈtÈ livrÈ.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_annexes_%datapro% n'a pas √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinAn
 )
 rem ===============================================================================================================================================================
-rem 2.4.2 OUVERTURE DU PDF 38XXX_annexes_AAAAMMJJ :
+rem 2.4.2 OUVERTURE DU PDF XXXXX_annexes_AAAAMMJJ
 rem ===============================================================================================================================================================
-: OpenAn
+:OpenAn
 cls
 echo Controle des PDF...
-rem ouvrir si pdf dÈtectÈ :
+rem ouvrir si pdf d√©tect√© :
 set /p pdfAnn= "Le pdf %insee%_annexes_%datapro% a bien ete livre. Voulez-vous l'ouvrir ?(o/n): "
 cls
 echo Controle des PDF...
 IF "%pdfAnn%"=="o" goto OAN
 IF not "%pdfAnn%"=="o" goto FinAn
 rem ouverture du pdf :
-: OAN
+:OAN
 rem ouverture du pdf :
  "%pdfAn%" /cmd
 set /p Anprob= "%insee%_annexes_%datapro% s'ouvre-t-il ? (o/n) : "
 IF "%Anprob%"=="n" (
-echo ---ERREURpdf -Le pdf %insee%_annexes_%datapro% ne s'ouvre pas. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_annexes_%datapro% ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 )
 cls
@@ -900,21 +886,20 @@ echo Controle des PDF...
 IF "%index4%"=="n" (goto index4) else goto FinAn
 :index4
 echo.>> %rappconf% 
-echo          ---ERREURpdf- Le pdf des annexes doit Ítre indexÈ. >> %rappconf% 
-: FinAn 
+echo ^<font color="red"^>ERREUR : le pdf des annexes n'est pas index√©.  ^</font^>^</br^>   >> %rappconf% 
+:FinAn 
 cls
 echo Controle des PDF...
 goto PDFOR
-rem ===============================================================================================================================================================
-
-
 
 :AnCC
+
 rem ===============================================================================================================================================================
-rem 2.4bis CONTROLE 38XXX_annexes_AAAAMMJJ : (CC)
+rem 2.4bis CONTROLE XXXXX_annexes_AAAAMMJJ (CC)
 rem ===============================================================================================================================================================
+
 echo.>> %rappconf%
-echo **%insee%_annexes_%datapro%.pdf :>> %rappconf%
+echo ^<blockquote ^> ^<h3^>2.2 %insee%_annexes_%datapro%.pdf^</h3^>^</blockquote^>  >> %rappconf%
 echo.>> %rappconf%
 
 rem recherche dans les noms des pdf "annexes":
@@ -927,14 +912,14 @@ IF EXIST "%pdfAnbis%" (
 goto AnOKbis
 ) else goto ConcatAnbis
 rem si oui conforme sinon test concatenage et nommage:
-: AnOKbis
-echo CONFORME -Le pdf %insee%_annexes_%datapro% a bien ÈtÈ livrÈ.>> %rappconf%
+:AnOKbis
+echo ^<font color="green"^>CONFORME : le pdf %insee%_annexe_%datapro% a bien √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto OpenAnbis
 rem ===============================================================================================================================================================
-rem 2.4.1bis NOMMAGE et CONCATENAGE %insee%_annexes_%datapro%.pdf (CC)
+rem 2.4.1bis NOMMAGE et CONCATENAGE XXXXX_annexes_AAAAMMJJ (CC)
 rem ===============================================================================================================================================================
-: ConcatAnbis
+:ConcatAnbis
 rem compte des pdf avec "annexes":
 for /f %%q in ('type liste_nom_pdf_%insee%.txt ^| find /i /c "annexes"') do (
 set NumAnbis=%%q
@@ -948,40 +933,40 @@ for /F %%s in ('type liste_nom_pdf_%insee%.txt^|find /i "annexes"') do echo    %
 set /p concat4bis="Faut-il proposer la concatenation dans le rapport ? (o/n) : ")
 rem question si oui il faut les concatener message dans rapport et passage au suivant sinon test nommage:
 IF "%concat4bis%"=="o" (
-echo ---ERREURpdf -Le pdf est ‡ concatÈner et ‡ renommer : %insee%_annexes_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† concat√©ner et √† renommer : %insee%_annexes_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo.>> %rappconf%
 goto FinAnbis
 )
 rem test nommage :
-: NomAnbis
+:NomAnbis
 IF EXIST  "%pe%\2_Annexes\*annexes*.pdf" (
-echo ---ERREURpdf -Le pdf est ‡ renommer : %insee%_annexes_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† renommer : %insee%_annexes_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinAnbis
 ) else (
-echo ---ERREURpdf -Le pdf %insee%_annexes_%datapro% n'a pas ÈtÈ livrÈ.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_annexes_%datapro% n'a pas √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinAnbis
 )
 rem ===============================================================================================================================================================
-rem 2.4.2bis OUVERTURE DU PDF 38XXX_annexes_AAAAMMJJ : (CC)
+rem 2.4.2bis OUVERTURE DU PDF XXXXX_annexes_AAAAMMJJ (CC)
 rem ===============================================================================================================================================================
-: OpenAnbis
+:OpenAnbis
 cls
 echo Controle des PDF...
-rem ouvrir si pdf dÈtectÈ :
+rem ouvrir si pdf d√©tect√© :
 set /p pdfAnn= "Le pdf %insee%_annexes_%datapro% a bien ete livre. Voulez-vous l'ouvrir ?(o/n): "
 cls
 echo Controle des PDF...
 IF "%pdfAnnbis%"=="o" goto OANbis
 IF not "%pdfAnnbis%"=="o" goto FinAnbis
 rem ouverture du pdf :
-: OANbis
+:OANbis
 rem ouverture du pdf :
  "%pdfAnbis%" /cmd
 set /p Anprobbis= "%insee%_annexes_%datapro% s'ouvre-t-il ? (o/n) : "
 IF "%Anprobbis%"=="n" (
-echo ---ERREURpdf -Le pdf %insee%_annexes_%datapro% ne s'ouvre pas. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_annexes_%datapro% ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 )
 rem INDEX :
@@ -991,8 +976,8 @@ echo Controle des PDF...
 IF "%index%"=="n" (goto index) else goto FinAnbis
 :index
 echo.>> %rappconf% 
-echo          ---ERREURpdf- Le pdf des annexes doit Ítre indexÈ. >> %rappconf% 
-: FinAnbis 
+echo ^<font color="red"^>ERREUR : le pdf des annexes n'est pas index√©.  ^</font^>^</br^>   >> %rappconf% 
+:FinAnbis 
 goto FinDocG
 rem ===============================================================================================================================================================
 
@@ -1000,10 +985,10 @@ rem ============================================================================
 
 :PDFOR
 rem ===============================================================================================================================================================
-rem 2.5.0 CONTROLE 38XXX_orientations_AAAAMMJJ :
+rem 2.5.0 CONTROLE XXXXX_orientations_AAAAMMJJ
 rem ===============================================================================================================================================================
 echo.>> %rappconf%
-echo **%insee%_orientations_%datapro%.pdf :>> %rappconf%
+echo ^<blockquote ^> ^<h3^>2.2 %insee%_orientations_%datapro%.pdf^</h3^>^</blockquote^>  >> %rappconf%
 echo.>> %rappconf%
 
 rem recherche dans les noms des pdf "orientations":
@@ -1016,14 +1001,14 @@ IF EXIST "%pdfOr%" (
 goto OrOK
 ) else goto ConcatOr
 rem si oui conforme sinon test concatenage et nommage:
-: OrOK
-echo CONFORME -Le pdf %insee%_orientations_%datapro% a bien ÈtÈ livrÈ.>> %rappconf%
+:OrOK
+echo ^<font color="green"^>CONFORME : le pdf %insee%_orientations_%datapro% a bien √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto OpenOr
 rem ===============================================================================================================================================================
-rem 2.5.1 NOMMAGE et CONCATENAGE %insee%_orientations_%datapro%.pdf 
+rem 2.5.1 NOMMAGE et CONCATENAGE XXXXX_orientations_AAAAMMJJ
 rem ===============================================================================================================================================================
-: ConcatOr
+:ConcatOr
 rem compte des pdf avec "orientations":
 for /f %%q in ('type liste_nom_pdf_%insee%.txt ^| find /i /c "orientations"') do (
 set NumOr=%%q
@@ -1037,39 +1022,39 @@ for /F %%s in ('type liste_nom_pdf_%insee%.txt^|find /i "orientations"') do echo
 set /p concat5="Faut-il proposer la concatenation dans le rapport ? (o/n) : ")
 rem question si oui il faut les concatener message dans rapport et passage au suivant sinon test nommage:
 IF "%concat5%"=="o" (
-echo ---ERREURpdf -Le pdf est ‡ concatÈner et ‡ renommer : %insee%_orientations_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† concat√©ner et √† renommer : %insee%_orientations_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo.>> %rappconf%
 goto FinOr
 )
 rem test nommage :
-: NomOr
+:NomOr
 IF EXIST  "%Or%\*orientations*.pdf" (
-echo ---ERREURpdf -Le pdf est ‡ renommer : %insee%_orientations_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† renommer : %insee%_orientations_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinOr
 ) else (
-echo ---ERREURpdf -Le pdf %insee%_orientations_%datapro% n'a pas ÈtÈ livrÈ.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_orientations_%datapro% n'a pas √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinOr
 )
 rem ===============================================================================================================================================================
-rem 2.5.2 OUVERTURE DU PDF 38XXX_orientations_AAAAMMJJ :
+rem 2.5.2 OUVERTURE DU PDF XXXXX_orientations_AAAAMMJJ
 rem ===============================================================================================================================================================
-: OpenOr
+:OpenOr
 cls
 echo Controle des PDF...
-rem ouvrir si pdf dÈtectÈ :
+rem ouvrir si pdf d√©tect√© :
 set /p pdfOri= "Le pdf %insee%_orientations_%datapro% a bien ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des PDF...
 IF "%pdfOri%"=="o" goto OOR
 IF not "%pdfOri%"=="o" goto FinOr
 rem ouverture du pdf :
-: OOR
+:OOR
  "%pdfOr%" /cmd
 set /p Orprob= "%insee%_orientations_%datapro% s'ouvre-t-il ? (o/n) : "
 IF "%Orprob%"=="n" (
-echo ---ERREURpdf -Le pdf %insee%_orientations_%datapro% ne s'ouvre pas. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_orientations_%datapro% ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 )
 cls
@@ -1081,8 +1066,8 @@ echo Controle des PDF...
 IF "%index5%"=="n" (goto index5) else goto FinOr
 :index5
 echo.>> %rappconf% 
-echo          ---- Le pdf des orientations d'amenagement n'est pas indexÈ. >> %rappconf% 
-: FinOr 
+echo ^<font color="red"^>ERREUR : le pdf des orientations n'est pas index√©.  ^</font^>^</br^>   >> %rappconf% 
+:FinOr 
 cls
 echo Controle des PDF...
 rem ===============================================================================================================================================================
@@ -1090,10 +1075,10 @@ rem ============================================================================
 
 
 rem ===============================================================================================================================================================
-rem 2.6.0 CONTROLE 38XXX_docgraphiques_AAAAMMJJ :
+rem 2.6.0 CONTROLE XXXXX_docgraphiques_AAAAMMJJ
 rem ===============================================================================================================================================================
 echo.>> %rappconf%
-echo **%insee%_docgraphiques_%datapro%.pdf :>> %rappconf%
+echo ^<blockquote ^> ^<h3^>2.2 %insee%_docgraphiques_%datapro%.pdf^</h3^>^</blockquote^>  >> %rappconf%
 echo.>> %rappconf%
 
 rem recherche dans les noms des pdf "docgraphiques":
@@ -1106,14 +1091,14 @@ IF EXIST "%pdfDocG%" (
 goto DocGOK
 ) else goto ConcatDocG
 rem si oui conforme sinon test concatenage et nommage:
-: DocGOK
-echo CONFORME -Le pdf %insee%_docgraphiques_%datapro% a bien ÈtÈ livrÈ.>> %rappconf%
+:DocGOK
+echo ^<font color="green"^>CONFORME : le pdf %insee%_docgraphiques_%datapro% a bien √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto OpenDocG
 rem ===============================================================================================================================================================
-rem 2.6.1 NOMMAGE et CONCATENAGE %insee%_docgraphiques_%datapro%.pdf 
+rem 2.6.1 NOMMAGE et CONCATENAGE XXXXX_docgraphiques_AAAAMMJJ
 rem ===============================================================================================================================================================
-: ConcatDocG
+:ConcatDocG
 rem compte des pdf avec "docgraphiques":
 for /f %%q in ('type liste_nom_pdf_%insee%.txt ^| find /i /c "graphique"') do (
 set NumDocG=%%q
@@ -1127,39 +1112,39 @@ for /F %%s in ('type liste_nom_pdf_%insee%.txt^|find /i "graphique"') do echo   
 set /p concat6="Faut-il proposer la concatenation dans le rapport ? (o/n) : ")
 rem question si oui il faut les concatener message dans rapport et passage au suivant sinon test nommage:
 IF "%concat6%"=="o" (
-echo ---ERREURpdf -Le pdf est ‡ concatÈner et ‡ renommer : %insee%_docgraphiques_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† concat√©ner et √† renommer : %insee%_docgraphiques_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo.>> %rappconf%
 goto FinDocG
 )
 rem test nommage :
-: NomDocG
+:NomDocG
 IF EXIST  "%DocG%\*graphique*.pdf" (
-echo ---ERREURpdf -Le pdf est ‡ renommer : %insee%_docgraphiques_%datapro%.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf est √† renommer : %insee%_docgraphiques_%datapro%.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinDocG
 ) else (
-echo ----Le pdf %insee%_docgraphiques_%datapro% n'a pas ÈtÈ livrÈ.>> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_docgraphiques_%datapro% n'a pas √©t√© livr√©.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 goto FinDocG
 )
 rem ===============================================================================================================================================================
-rem 2.6.2 OUVERTURE DU PDF 38XXX_docgraphiques_AAAAMMJJ :
+rem 2.6.2 OUVERTURE DU PDF XXXXX_docgraphiques_AAAAMMJJ
 rem ===============================================================================================================================================================
-: OpenDocG
+:OpenDocG
 cls
 echo Controle des PDF...
-rem ouvrir si pdf dÈtectÈ :
+rem ouvrir si pdf d√©tect√© :
 set /p pdfDocGraph= "Le pdf %insee%_docgraphiques_%datapro% a bien ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des PDF...
 IF "%pdfDocGraph%"=="o" goto ODocG
 IF not "%pdfDocGraph%"=="o" goto FinDocG
 rem ouverture du pdf :
-: ODocG
+:ODocG
  "%pdfDocG%" /cmd
 set /p DocGprob= "%insee%_docgraphiques_%datapro% s'ouvre-t-il ? (o/n) : "
 IF "%DocGprob%"=="n" (
-echo ---ERREURpdf -Le pdf %insee%_docgraphiques_%datapro% ne s'ouvre pas. >> %rappconf%
+echo ^<font color="red"^>ERREUR : le pdf %insee%_docgraphiques_%datapro% ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
 )
 cls
@@ -1171,8 +1156,8 @@ echo Controle des PDF...
 IF "%index6%"=="n" (goto index6) else goto FinDocG
 :index6
 echo.>> %rappconf% 
-echo          ---- Le pdf des documents graphiques n'est pas indexÈ. >> %rappconf% 
-: FinDocG
+echo ^<font color="red"^>ERREUR : le pdf des docs graphiques n'est pas index√©.  ^</font^>^</br^>   >> %rappconf% 
+:FinDocG
 cls
 echo Controle des PDF...
 rem ===============================================================================================================================================================
@@ -1184,29 +1169,28 @@ del liste_pdf_%insee%.txt
 rem ===============================================================================================================================================================
 rem BILAN controle pdf :
 rem ===============================================================================================================================================================
-: BilanPDF
-for /F "usebackq" %%o in (`type %rappconf% ^|find /c "ERREURpdf"`) do (
+:BilanPDF
+for /F "usebackq" %%o in (`type %rappconf% ^|find /c "ERREUR"`) do (
 set pdf=%%o
 )
 echo.
 echo %pdf% Erreur(s)
 IF %pdf%==0 goto pdfa
 IF not %pdf%==0 goto pdfb
-: pdfa
+:pdfa
 echo --------------------------------------------------------------------------------
-echo                                                 ********************************>> %rappconf%
-echo                                                           PDF : CONFORME>> %rappconf%
-echo                                                 ********************************>> %rappconf%
+
+echo ^<font color="green"^>^<h2^>^<div align="center"^>^<u^> Arborescence : CONFORME^</u^>^</h2^>^</div align="center"^> ^</font^>^</br^>  >> %rappconf%
+
 echo *PDF : CONFORME*
 goto pdfc
-: pdfb
+:pdfb
 echo --------------------------------------------------------------------------------
-echo                                                 ********************************>> %rappconf%
-echo                                                         PDF : NON CONFORME>> %rappconf%
-echo                                                                    %pdf% Erreur(s)>> %rappconf%
-echo                                                 ********************************>> %rappconf%
+echo ^<font color="red"^>^<h2^>^<div align="center"^>^<u^> Arborescence : NON CONFORME^</u^>^</h2^>^</div align="center"^> ^</font^>^</br^>  >> %rappconf%
+echo ^<font color="red"^>^<h2^>^<div align="center"^>%pdf% Erreur(s) ^</h2^>^</div align="center"^> ^</font^>^</br^>  >> %rappconf%
+echo. >> %rappconf%
 echo *PDF : NON CONFORME*
-: pdfc
+:pdfc
 echo. >> %rappconf%
 echo.
 echo ...fin
@@ -1222,15 +1206,13 @@ rem ============================================================================
 
 :DebutControleDG
 rem ===============================================================================================================================================================
-rem III- Module de contrÙle des fichiers cartographiques 
+rem III- Module de contr√¥le des fichiers cartographiques 
 rem ===============================================================================================================================================================
-echo --------------------****************************************-------------------->>%rappconf%
-echo                       CONTROLE DES DONNEES GEOGRAPHIQUES : >> %rappconf%
-echo --------------------****************************************-------------------->> %rappconf%
+echo ^<blockquote ^> ^<h2^>3. Contr√¥le des donn√©es g√©ographiques ^</h2^>^</blockquote ^>  >> %rappconf%
 echo. >> %rappconf%
 
 rem ===============================================================================================================================================================
-rem 3.0 Controle des Formats livrÈs (listesDG):
+rem 3.0 Controle des Formats livr√©s (listesDG):
 rem ===============================================================================================================================================================
 rem liste shape :
 dir n/b/s %doss%\*.shp > liste_shape_%insee%.txt
@@ -1257,7 +1239,7 @@ cls
 echo Controle des donnees geographiques...
 echo.
 
-rem Compte les docs livrÈs :
+rem Compte les docs livr√©s :
 echo Detection des formats livres :
 
 rem shp
@@ -1288,7 +1270,7 @@ set thf0=%%w
 IF %thf0%==0 del liste_edigeo_%insee%.txt
 IF not %thf0%==0 echo %thf0% couche(s) edigeo.
 
-rem additionne tout les rÈsultats dans une seule valeur :
+rem additionne tout les r√©sultats dans une seule valeur :
 set /a cch=%thf0%+%mif0%+%tab0%+%shp0%
 echo.
 
@@ -1300,13 +1282,13 @@ cls
 echo Controle des donnees geographiques...
  echo.
  echo ...Aucune couche detectee !
- echo ***ERREURdg -Aucune couche n'a ÈtÈ livrÈe. >> %rappconf%
+echo ^<font color="red"^>ERREUR : Aucune couche n'a √©t√© livr√©e. ^</font^>^</br^>   >> %rappconf%
  echo.
 goto BilanDG
 
 :Listes
 pause
-echo LISTE DES COUCHES LIVREES : >> %rappconf%
+echo Liste des couches g√©ographiques livr√©es : >> %rappconf% 
 IF %shp0%==0 goto TAB
 IF not %shp0%==0 goto ListeSHP
 :TAB
@@ -1322,49 +1304,46 @@ IF not %thf0%==0 goto ListeEDI
 rem ===============================================================================================================================================================
 rem Affichage liste dg par type dans rapport :
 rem ===============================================================================================================================================================
-: ListeSHP
-echo -------------------------- >> %rappconf% 
-echo Format Shape : >> %rappconf% 
-rem extraction de la liste des couches livrÈes avec nomfichier+extension :
+:ListeSHP
+
+echo ^<blockquote ^>Format Shape :^</blockquote ^> >> %rappconf% 
+rem extraction de la liste des couches livr√©es avec nomfichier+extension :
 for /F %%y in ('type liste_shape_%insee%.txt ^|find /i ".shp"') do (
-echo    %%~nxy >> %rappconf%
+echo  ^<blockquote ^>^<blockquote ^>  %%~nxy ^</blockquote ^>^</blockquote ^>  >> %rappconf%
 )
-echo + dbf,prj,shx >> %rappconf% 
-echo -------------------------- >> %rappconf% 
+echo ^<blockquote ^>^<blockquote ^> + dbf,prj,shx ^</blockquote ^>^</blockquote ^> >> %rappconf% 
+
 
 goto TAB
-: ListeTAB
-echo -------------------------- >> %rappconf% 
-echo Format Mapinfo : >> %rappconf% 
-rem extraction de la liste des couches livrÈes avec nomfichier+extension :
+:ListeTAB
+echo ^<blockquote ^>Format MapInfo :^</blockquote ^> >> %rappconf% 
+rem extraction de la liste des couches livr√©es avec nomfichier+extension :
 for /F %%y in ('type liste_mapinfo_%insee%.txt ^|find ".TAB"') do (
-echo    %%~nxy >> %rappconf%
+echo  ^<blockquote ^>^<blockquote ^>  %%~nxy ^</blockquote ^>^</blockquote ^>  >> %rappconf%
 )
-echo + map,dat,id >> %rappconf% 
-echo -------------------------- >> %rappconf% 
+echo ^<blockquote ^>^<blockquote ^> + map,dat,id  ^</blockquote ^>^</blockquote ^> >> %rappconf% 
+
 
 goto MIF
-: ListeMIF
-echo -------------------------- >> %rappconf% 
-echo Format Mif/Mid : >> %rappconf% 
-rem extraction de la liste des couches livrÈes avec nomfichier+extension :
+:ListeMIF
+echo ^<blockquote ^>Format Mif/Mid :^</blockquote ^> >> %rappconf% 
+rem extraction de la liste des couches livr√©es avec nomfichier+extension :
 for /F %%y in ('type liste_mif_mid_%insee%.txt ^|find ".mif"') do (
-echo    %%~nxy >> %rappconf%
+echo  ^<blockquote ^>^<blockquote ^>  %%~nxy ^</blockquote ^>^</blockquote ^>  >> %rappconf%
 )
-echo + mid >> %rappconf% 
-echo -------------------------- >> %rappconf% 
+echo ^<blockquote ^>^<blockquote ^> + mid ^</blockquote ^>^</blockquote ^> >> %rappconf% 
+
 
 goto EDI
-: ListeEDI
-echo -------------------------- >> %rappconf% 
-echo Format Edigeo : >> %rappconf% 
-rem extraction de la liste des couches livrÈes avec nomfichier+extension :
+:ListeEDI
+echo ^<blockquote ^>Format Edig√©o :^</blockquote ^> >> %rappconf% 
+rem extraction de la liste des couches livr√©es avec nomfichier+extension :
 for /F %%y in ('type liste_edigeo_%insee%.txt ^|find /i ".THF"') do (
-echo    %%~nxy >> %rappconf%
+echo  ^<blockquote ^>^<blockquote ^>  %%~nxy ^</blockquote ^>^</blockquote ^>  >> %rappconf%
 )
-echo + gen,geo,mat,qal,dic,scd,vec >> %rappconf%
+echo ^<blockquote ^>^<blockquote ^> + gen,geo,mat,qal,dic,scd,vec ^</blockquote ^>^</blockquote ^> >> %rappconf% 
 echo !Ce test ne traite pas le format EDIGEO! convertir en .shp, .tab, ou .mif/mid. 
-echo -------------------------- >> %rappconf%
+
 
 rem ===============================================================================================================================================================
 rem Controle des couches (nommage, structure, topo) :
@@ -1383,9 +1362,7 @@ del liste_edigeo_%insee%.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo. >> %rappconf%
-echo CONTROLES DES COUCHES : >> %rappconf%
-echo. >> %rappconf%
+
 rem ===============================================================================================================================================================
 rem renvoi si "CC" :
 IF "%doc%"=="CC" goto SecteurCC
@@ -1396,11 +1373,11 @@ IF "%doc%"=="CC" goto SecteurCC
 rem ===============================================================================================================================================================
 rem 3.1.0 TEST ZONE_URBA :
 rem ===============================================================================================================================================================
-echo *N_ZONE_URBA_%insee%_038 :
-echo **N_ZONE_URBA_%insee%_038 :*******************************************************>> %rappconf%
+echo *N_ZONE_URBA_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.1 Contr√¥le de la couche N_ZONE_URBA_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%q in ('type ListeDG_%insee%.txt ^| find /i "ZONE"') do (
 set ZUnom=%%~nq
 move "%%q" "%dg%"
@@ -1430,7 +1407,7 @@ goto ZU1
 goto ZU2
 )
 :ZU1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU 
 :ZU2
@@ -1440,7 +1417,7 @@ goto ZU3
 goto ZU4
 )
 :ZU3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU
 :ZU4
@@ -1450,17 +1427,17 @@ goto ZU5
 goto ZU6
 )
 :ZU5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU 
 :ZU6
-IF EXIST "%dg%\N_ZONE_URBA_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_ZONE_URBA_%insee%_%dep%.shp" ( 
 goto ZU7
 ) else (
 goto ZU8
 )
 :ZU7
-	echo CONFORME -La couche N_ZONE_URBA_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_ZONE_URBA_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU
 :ZU8
@@ -1470,17 +1447,17 @@ goto ZU9
 goto ZU10
 )
 :ZU9
-	echo ---ERREURdg -La couche est ‡ renommer : N_ZONE_URBA_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_ZONE_URBA_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU 
 :ZU10
-IF EXIST "%dg%\N_ZONE_URBA_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_ZONE_URBA_%insee%_%dep%.tab" ( 
 goto ZU11
 ) else (
 goto ZU12
 )
 :ZU11
-	echo CONFORME -La couche N_ZONE_URBA_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_ZONE_URBA_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU
 :ZU12
@@ -1490,17 +1467,17 @@ goto ZU13
 goto ZU14
 )
 :ZU13
-	echo ---ERREURdg -La couche est ‡ renommer : N_ZONE_URBA_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_ZONE_URBA_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU	
 :ZU14
-IF EXIST "%dg%\N_ZONE_URBA_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_ZONE_URBA_%insee%_%dep%.mif" ( 
 goto ZU15
 ) else (
 goto ZU16
 )
 :ZU15
-	echo CONFORME -La couche N_ZONE_URBA_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_ZONE_URBA_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU
 :ZU16
@@ -1510,11 +1487,11 @@ goto ZU17
 goto NOZU
 )
 :ZU17
-	echo ---ERREURdg -La couche est ‡ renommer : N_ZONE_URBA_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_ZONE_URBA_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenZU 
 :NOZU
-	echo ----La couche N_ZONE_URBA_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche N_ZONE_URBA_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto PSURF
@@ -1522,22 +1499,22 @@ goto NOZU
 rem ===============================================================================================================================================================
 rem 3.1.2 CONTROLE PROJECTION et ENCODAGE ZONE_URBA :
 rem ===============================================================================================================================================================
-: OpenZU 
+:OpenZU 
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_ZONE_URBA_%insee%_038 :
+echo *N_ZONE_URBA_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpZU= "La couche %ZU% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_ZONE_URBA_%insee%_038 :
+echo *N_ZONE_URBA_%insee%_%dep% :
 
 IF "%OpZU%"=="o" (goto OZU) else goto TopoZU
 
-: OZU
+:OZU
 rem ouverture de la couche ZU dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%ZU%"
@@ -1548,30 +1525,30 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvZU="La couche %ZU% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvZU%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ1="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ1%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 93, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO1="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO1%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem1="Remarque(s) : "
  IF NOT "%Rem1%"=="" (
- echo -----**REMARQUES : "%Rem1%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem1%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
 
 rem ===============================================================================================================================================================
 rem 3.1.3 CONTROLE TOPOLOGIQUE ZONE_URBA :
 rem ===============================================================================================================================================================
-: TopoZU
-rem IMPORT DE LA COUCHE shape ZONE_URBA DS POSTGRE:
+:TopoZU
+rem IMPORT DE LA COUCHE shape ZONE_URBA DS POSTGRES:
 rem --------------------------------------------------------------------------------------------
 echo.
 echo IMPORT de la couche : %ZU%
@@ -1584,7 +1561,7 @@ rem pause
 
 echo * Controle topologique...
 echo.
-rem creation de la table des gÈomÈtries invalides :
+rem creation de la table des g√©om√©tries invalides :
 rem --------------------------------------------------------------------------------------------
 echo 	*Detection des geometries invalides :
 echo.
@@ -1607,7 +1584,7 @@ rem ----------------------------------------------------------------------------
  cls
 echo Controle des donnees geographiques...
  echo.
- echo *N_ZONE_URBA_%insee%_038 :
+ echo *N_ZONE_URBA_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -1623,13 +1600,13 @@ echo Controle des donnees geographiques...
     del "%ET%\%insee%_geom_invalid.shx"
 	)
  
- :CHEV
+:CHEV
 rem creation de la table des chevauchements :
 rem --------------------------------------------------------------------------------------------
 cls
 echo Controle des donnees geographiques...
  echo.
- echo *N_ZONE_URBA_%insee%_038 :
+ echo *N_ZONE_URBA_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -1654,7 +1631,7 @@ rem ----------------------------------------------------------------------------
  cls
 echo Controle des donnees geographiques...
  echo.
- echo *N_ZONE_URBA_%insee%_038 :
+ echo *N_ZONE_URBA_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -1670,13 +1647,13 @@ echo Controle des donnees geographiques...
     del "%ET%\%insee%_chevauchement.shx"
     )
   
- :TROU
+:TROU
 rem creation de la table des trous :
 rem --------------------------------------------------------------------------------------------
 cls
  echo Controle des donnees geographiques...
  echo.
- echo *N_ZONE_URBA_%insee%_038 :
+ echo *N_ZONE_URBA_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -1701,7 +1678,7 @@ rem ----------------------------------------------------------------------------
  cls
 echo Controle des donnees geographiques...
  echo.
- echo *N_ZONE_URBA_%insee%_038 :
+ echo *N_ZONE_URBA_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -1717,13 +1694,13 @@ echo Controle des donnees geographiques...
     del "%ET%\%insee%_trous.shx"
     )
   
- :DECA
+:DECA
 rem creation de la table des decalages_sections selon le referentiel IGN ou PCI (PCI par defaut):
 rem --------------------------------------------------------------------------------------------
 cls
 echo Controle des donnees geographiques...
  echo.
- echo *N_ZONE_URBA_%insee%_038 :
+ echo *N_ZONE_URBA_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -1752,7 +1729,7 @@ rem ----------------------------------------------------------------------------
  cls
 echo Controle des donnees geographiques...
  echo.
- echo *N_ZONE_URBA_%insee%_038 :
+ echo *N_ZONE_URBA_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -1768,7 +1745,7 @@ echo Controle des donnees geographiques...
     del "%ET%\%insee%_decalages_section.shx"
     )
  
-: FinTopoZU
+:FinTopoZU
 rem liste shape erreurs topo :
 rem ------------------------------------------------------------------------------------------------
 dir n/b/s Erreurs_topo\*.shp > liste_couches_erreurs_topo_%insee%.txt
@@ -1785,22 +1762,22 @@ IF %toposhp%==0 (goto TopoOK) else goto ErreurTopo
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_ZONE_URBA_%insee%_038 :
+echo *N_ZONE_URBA_%insee%_%dep% :
 echo Controle topologique ...
 echo         ...fin controle topologique.
 echo ------------------------------------
 echo *TOPO NON CONFORME*
 echo %toposhp% couches erreurs.
 
-echo -----**ERREURdg-TOPOLOGIE NON-CONFORME: >> %rappconf% 
+echo ^<font color="red"^>ERREUR : TOPOLOGIE NON-CONFORME:   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %toposhp% Couches erreurs topo: >> %rappconf% 
-
+echo ^<font color="red"^>%toposhp% couche(s) avec au moins une erreur de topologie : ^</font^> ^</br^> >> %rappconf% 
+echo ^<font color="red"^>Couche(s) erreurs g√©n√©r√©es dans le r√©pertoire %ET% pour v√©rification : ^</br^> >> %rappconf% 
 rem extraction de la liste des couches erreurs avec nomfichier+extension :
 for /F %%y in ('type liste_couches_erreurs_topo_%insee%.txt ^|find /i ".shp"') do (
-echo          %%~nxy >> %rappconf%
+echo  ^<blockquote^>%%~nxy^</blockquote^> >> %rappconf%
 )
-echo. >> %rappconf% 
+echo. ^</font^> >> %rappconf% 
 echo.
 pause
 goto StructureZU
@@ -1809,13 +1786,13 @@ goto StructureZU
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_ZONE_URBA_%insee%_038 :
+echo *N_ZONE_URBA_%insee%_%dep% :
 echo Controle topologique ...
 echo         ...fin controle topologique.
 echo ------------------------------------
-echo *TOPO CONFORME*
+echo *TOPOLOGIE CONFORME*
 
-echo -----**TOPOLOGIE CONFORME. >> %rappconf%              
+echo ^<font color="green"^>CONFORME : TOPOLOGIE CONFORME.   ^</font^>^</br^>   >> %rappconf%              
 echo. >> %rappconf% 
 pause
 
@@ -1827,23 +1804,23 @@ del liste_couches_erreurs_topo_%insee%.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_ZONE_URBA_%insee%_038 :
+echo *N_ZONE_URBA_%insee%_%dep% :
 echo.
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_1_controle_structure_zu.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_zone_urba dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_zu) to STDOUT" > %ES%\%insee%_erreurs_structure_zone_urba.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_zone_urba.txt :
-for /F "usebackq" %%t in (`type %ES%\%insee%_erreurs_structure_zone_urba.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%t in (`type %ES%\%insee%_erreurs_structure_zone_urba.txt ^|find /i /c "ERREUR"`) do (
 set structureZU=%%t
 )
 
 rem =============================================================================================================================================================
-rem PAUSE2 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer) :
+rem PAUSE2 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer) :
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement.
@@ -1856,26 +1833,31 @@ IF %structureZU%==0 (goto StructureZUok) else goto StructureZUnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_ZONE_URBA_%insee%_038 :
+echo *N_ZONE_URBA_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureZU% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_ZONE_URBA_%insee%_038 comporte 10 champs : >> %rappconf%  
-echo        IDURBA (varchar 20) / LIBELLE (varchar 12) / LIBELONG (varchar 254) >> %rappconf% 
-echo        TYPEZONE (varchar 3) / DESTDOMI (varchar 2) / NOMFIC (varchar 80) >> %rappconf% 
-echo        URLFIC (varchar 254) / INSEE (varchar 5) / DATAPPRO (date) / DATVALID (date)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE. >> %rappconf% 
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL : La couche N_ZONE_URBA_%insee%_%dep% comporte 10 champs :   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>IDURBA (varchar 20)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 12)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELONG (varchar 254)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEZONE (varchar 3)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DESTDOMI (varchar 2)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATAPPRO (date)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATVALID (date)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureZU% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureZU% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%y in ('type %ES%\%insee%_erreurs_structure_zone_urba.txt ^|find /i "ERREURdg"') do (
-echo    %%y >> %rappconf%
+for /F "delims=" %%y in ('type %ES%\%insee%_erreurs_structure_zone_urba.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%y^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf% 
 echo.>> %rappconf% 
@@ -1888,12 +1870,12 @@ del %ES%\%insee%_erreurs_structure_zone_urba.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_ZONE_URBA_%insee%_038 :
+echo *N_ZONE_URBA_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME. >> %rappconf%              
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%             
 echo.>> %rappconf% 
 echo.>> %rappconf% 
 pause
@@ -1909,11 +1891,11 @@ rem ============================================================================
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_SURF_%insee%_038 :
-echo **N_PRESCRIPTION_SURF_%insee%_038 :***********************************************>> %rappconf%
+echo *N_PRESCRIPTION_SURF_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.2 Contr√¥le de la couche N_PRESCRIPTION_SURF_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%r in ('type ListeDG_%insee%.txt ^| find /i "PRESC"') do (
 echo %%r >> ListePresc_%insee%.txt
 move "%%r" "%dg%"
@@ -1927,18 +1909,18 @@ rem recherche du format et ajout de l'extension au nom:
 IF EXIST "%dg%\%PSnom%.shp" ( 
 set PS=%PSnom%.shp
 goto NomPS
-)
+) ELSE (
 IF EXIST "%dg%\%PSnom%.tab" ( 
 set PS=%PSnom%.tab
 goto NomPS
-)
+) ELSE (
 IF EXIST "%dg%\%PSnom%.mif" ( 
 pause
 set PS=%PSnom%.mif
 goto NomPS
-)
+) ELSE (
 goto NOPS
-
+)))
 rem ===============================================================================================================================================================
 rem 3.2.1 CONTROLE NOMMAGE PRESCRIPTION_SURF: 
 rem ===============================================================================================================================================================
@@ -1949,7 +1931,7 @@ goto PS1
 goto PS2
 )
 :PS1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS 
 :PS2
@@ -1959,7 +1941,7 @@ goto PS3
 goto PS4
 )
 :PS3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS
 :PS4
@@ -1969,17 +1951,17 @@ goto PS5
 goto PS6
 )
 :PS5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS 
 :PS6
-IF EXIST "%dg%\N_PRESCRIPTION_SURF_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_SURF_%insee%_%dep%.shp" ( 
 goto PS7
 ) else (
 goto PS8
 )
 :PS7
-	echo CONFORME -La couche N_PRESCRIPTION_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS
 :PS8
@@ -1989,17 +1971,17 @@ goto PS9
 goto PS10
 )
 :PS9
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS 
 :PS10
-IF EXIST "%dg%\N_PRESCRIPTION_SURF_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_SURF_%insee%_%dep%.tab" ( 
 goto PS11
 ) else (
 goto PS12
 )
 :PS11
-	echo CONFORME -La couche N_PRESCRIPTION_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS
 :PS12
@@ -2009,17 +1991,17 @@ goto PS13
 goto PS14
 )
 :PS13
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS	
 :PS14
-IF EXIST "%dg%\N_PRESCRIPTION_SURF_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_SURF_%insee%_%dep%.mif" ( 
 goto PS15
 ) else (
 goto PS16
 )
 :PS15
-	echo CONFORME -La couche N_PRESCRIPTION_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS
 :PS16
@@ -2029,11 +2011,11 @@ goto PS17
 goto NOPS
 )
 :PS17
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPS 
 :NOPS
-	echo ----La couche N_PRESCRIPTION_SURF_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_PRESCRIPTION_SURF_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto PLIN
@@ -2041,22 +2023,22 @@ goto NOPS
 rem ===============================================================================================================================================================
 rem 3.2.2 CONTROLE PROJECTION et ENCODAGE PRESCRIPTION_SURF :
 rem ===============================================================================================================================================================
-: OpenPS 
+:OpenPS 
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_SURF_%insee%_038 :
+echo *N_PRESCRIPTION_SURF_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpPS= "La couche %PS% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_SURF_%insee%_038 :
+echo *N_PRESCRIPTION_SURF_%insee%_%dep% :
 
 IF "%OpPS%"=="o" (goto OPS) else goto StructurePS
 
-: OPS
+:OPS
 rem ouverture de la couche PS dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%PS%"
@@ -2067,22 +2049,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvPS="La couche %PS% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvPS%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ2="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ2%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 93, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO2="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO2%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem2="Remarque(s) : "
  IF NOT "%Rem2%"=="" (
- echo -----**REMARQUES : "%Rem2%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem2%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -2103,19 +2085,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_2_controle_structure_ps.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_prescription_surf dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_ps) to STDOUT" > %ES%\%insee%_erreurs_structure_prescription_surf.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_prescription_surf.txt :
-for /F "usebackq" %%d in (`type %ES%\%insee%_erreurs_structure_prescription_surf.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%d in (`type %ES%\%insee%_erreurs_structure_prescription_surf.txt ^|find /i /c "ERREUR"`) do (
 set structurePS=%%d
 )
 
 rem =============================================================================================================================================================
-rem PAUSE3 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE3 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -2128,28 +2110,33 @@ IF %structurePS%==0 (goto StructurePSok) else goto StructurePSnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_SURF_%insee%_038 :
+echo *N_PRESCRIPTION_SURF_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structurePS% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_PRESCRIPTION_SURF_%insee%_038 comporte 8 champs :>> %rappconf%  
-echo        LIBELLE (varchar 254)/TXT (varchar 10)/TYPEPSC (varchar 2)>> %rappconf% 
-echo        NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
-echo        DATAPPRO (date)/DATVALID (date)>> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL : La couche N_PRESCRIPTION_SURF_%insee%_%dep% comporte 10 champs :   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>IDURBA (varchar 20)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 12)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELONG (varchar 254)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEZONE (varchar 3)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DESTDOMI (varchar 2)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATAPPRO (date)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATVALID (date)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structurePS% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureZU% erreur(s) de structuration : ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%v in ('type %ES%\%insee%_erreurs_structure_prescription_surf.txt ^|find /i "ERREURdg"') do (
-echo    %%v >> %rappconf%
+for /F "delims=" %%v in ('type %ES%\%insee%_erreurs_structure_prescription_surf.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%v ^</blockquote^> ^</br^>   >> %rappconf%
 )
-echo.>> %rappconf%
+echo ^</font^> >> %rappconf%
 echo.>> %rappconf% 
 echo.
 pause
@@ -2160,12 +2147,12 @@ del %ES%\%insee%_erreurs_structure_prescription_surf.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_SURF_%insee%_038 :
+echo *N_PRESCRIPTION_SURF_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%          
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -2177,15 +2164,15 @@ rem ============================================================================
 rem ===============================================================================================================================================================
 rem 3.3.0 TEST PRESCRIPTION_LIN :
 rem ===============================================================================================================================================================
-: PLIN
+:PLIN
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_LIN_%insee%_038 :
-echo **N_PRESCRIPTION_LIN_%insee%_038 :*************************************************>> %rappconf%
+echo *N_PRESCRIPTION_LIN_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.3 Contr√¥le de la couche N_PRESCRIPTION_LIN_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListePresc_%insee%.txt ^| find /i "LIN"') do (
 set PLnom=%%~ns
 )
@@ -2194,18 +2181,18 @@ rem recherche du format et ajout de l'extension au nom:
 IF EXIST "%dg%\%PLnom%.shp" ( 
 set PL=%PLnom%.shp
 goto NomPL
-)
+) ELSE (
 IF EXIST "%dg%\%PLnom%.tab" ( 
 set PL=%PLnom%.tab
 goto NomPL
-)
+) ELSE (
 IF EXIST "%dg%\%PLnom%.mif" ( 
 pause
 set PL=%PLnom%.mif
 goto NomPL
-)
+) ELSE (
 goto NOPL
-
+)))
 rem ===============================================================================================================================================================
 rem 3.3.1 CONTROLE NOMMAGE PRESCRIPTION_LIN: 
 rem ===============================================================================================================================================================
@@ -2216,7 +2203,7 @@ goto PL1
 goto PL2
 )
 :PL1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL 
 :PL2
@@ -2226,7 +2213,7 @@ goto PL3
 goto PL4
 )
 :PL3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL
 :PL4
@@ -2236,17 +2223,17 @@ goto PL5
 goto PL6
 )
 :PL5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL 
 :PL6
-IF EXIST "%dg%\N_PRESCRIPTION_LIN_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_LIN_%insee%_%dep%.shp" ( 
 goto PL7
 ) else (
 goto PL8
 )
 :PL7
-	echo CONFORME -La couche N_PRESCRIPTION_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL
 :PL8
@@ -2256,17 +2243,17 @@ goto PL9
 goto PL10
 )
 :PL9
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL 
 :PL10
-IF EXIST "%dg%\N_PRESCRIPTION_LIN_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_LIN_%insee%_%dep%.tab" ( 
 goto PL11
 ) else (
 goto PL12
 )
 :PL11
-	echo CONFORME -La couche N_PRESCRIPTION_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL
 :PL12
@@ -2276,17 +2263,17 @@ goto PL13
 goto PL14
 )
 :PL13
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL	
 :PL14
-IF EXIST "%dg%\N_PRESCRIPTION_LIN_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_LIN_%insee%_%dep%.mif" ( 
 goto PL15
 ) else (
 goto PL16
 )
 :PL15
-	echo CONFORME -La couche N_PRESCRIPTION_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL
 :PL16
@@ -2296,11 +2283,11 @@ goto PL17
 goto NOPL
 )
 :PL17
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPL 
 :NOPL
-	echo ----La couche N_PRESCRIPTION_LIN_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_PRESCRIPTION_LIN_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto PPCT
@@ -2309,22 +2296,22 @@ goto NOPL
 rem ===============================================================================================================================================================
 rem 3.3.2 CONTROLE PROJECTION et ENCODAGE PRESCRIPTION_LIN :
 rem ===============================================================================================================================================================
-: OpenPL
+:OpenPL
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_LIN_%insee%_038 :
+echo *N_PRESCRIPTION_LIN_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpPL= "La couche %PL% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_LIN_%insee%_038 :
+echo *N_PRESCRIPTION_LIN_%insee%_%dep% :
 
 IF "%OpPL%"=="o" (goto OPL) else goto StructurePL
 
-: OPL
+:OPL
 rem ouverture de la couche PL dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%PL%"
@@ -2335,22 +2322,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvPL="La couche %PL% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvPL%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ3="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ3%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 93, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO3="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO3%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.>> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem3="Remarque(s) : "
  IF NOT "%Rem3%"=="" (
- echo -----**REMARQUES : "%Rem3%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem3%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -2371,22 +2358,22 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_3_controle_structure_pl.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_prescription_lin dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_pl) to STDOUT" > %ES%\%insee%_erreurs_structure_prescription_lin.txt
 
-rem table erreur_structure_prescription_lin dÈplacÈe vers dossier Erreurs_structure
+rem table erreur_structure_prescription_lin d√©plac√©e vers dossier Erreurs_structure
 rem move "%PGDATA%\%insee%_erreurs_structure_prescription_lin.txt" "%ES%"
 
 rem decompte des lignes erreurs dans erreurs_structure_prescription_lin.txt :
-for /F "usebackq" %%f in (`type %ES%\%insee%_erreurs_structure_prescription_lin.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%f in (`type %ES%\%insee%_erreurs_structure_prescription_lin.txt ^|find /i /c "ERREUR"`) do (
 set structurePL=%%f
 )
 
 rem =============================================================================================================================================================
-rem PAUSE4 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE4 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -2399,26 +2386,29 @@ IF %structurePL%==0 (goto StructurePLok) else goto StructurePLnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_LIN_%insee%_038 :
+echo *N_PRESCRIPTION_LIN_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structurePL% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_PRESCRIPTION_LIN_%insee%_038 comporte 8 champs :>> %rappconf%  
-echo        LIBELLE (varchar 254)/TXT (varchar 10)/TYPEPSC (varchar 2)>> %rappconf% 
-echo        NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf% 
-echo        DATAPPRO (date)/DATVALID (date)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL COVADIS : La couche N_PRESCRIPTION_LIN_%insee%_%dep% comporte 8 champs :   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 10)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEPSC (varchar 2)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATAPPRO (date)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATVALID (date)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structurePL% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structurePL% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%c in ('type %ES%\%insee%_erreurs_structure_prescription_lin.txt ^|find /i "ERREURdg"') do (
-echo    %%c >> %rappconf%
+for /F "delims=" %%c in ('type %ES%\%insee%_erreurs_structure_prescription_lin.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%c^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -2431,12 +2421,12 @@ del %ES%\%insee%_erreurs_structure_prescription_lin.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_LIN_%insee%_038 :
+echo *N_PRESCRIPTION_LIN_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%     
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -2448,15 +2438,15 @@ rem ============================================================================
 rem ===============================================================================================================================================================
 rem 3.4.0 TEST PRESCRIPTION_PCT :
 rem ===============================================================================================================================================================
-: PPCT
+:PPCT
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_PCT_%insee%_038 :
-echo **N_PRESCRIPTION_PCT_%insee%_038 :************************************************>> %rappconf%
+echo *N_PRESCRIPTION_PCT_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.4 Contr√¥le de la couche N_PRESCRIPTION_PCT_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListePresc_%insee%.txt ^| find /i "PCT"') do (
 set PPnom=%%~ns
 )
@@ -2465,18 +2455,18 @@ rem recherche du format et ajout de l'extension au nom:
 IF EXIST "%dg%\%PPnom%.shp" ( 
 set PP=%PPnom%.shp
 goto NomPP
-)
+) ELSE (
 IF EXIST "%dg%\%PPnom%.tab" ( 
 set PP=%PPnom%.tab
 goto NomPP
-)
+) ELSE (
 IF EXIST "%dg%\%PPnom%.mif" ( 
 pause
 set PP=%PPnom%.mif
 goto NomPP
-)
+) ELSE (
 goto NOPP
-
+)))
 rem ===============================================================================================================================================================
 rem 3.4.1 CONTROLE NOMMAGE PRESCRIPTION_PCT: 
 rem ===============================================================================================================================================================
@@ -2487,7 +2477,7 @@ goto PP1
 goto PP2
 )
 :PP1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP 
 :PP2
@@ -2497,7 +2487,7 @@ goto PP3
 goto PP4
 )
 :PP3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP
 :PP4
@@ -2507,17 +2497,17 @@ goto PP5
 goto PP6
 )
 :PP5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP 
 :PP6
-IF EXIST "%dg%\N_PRESCRIPTION_PCT_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_PCT_%insee%_%dep%.shp" ( 
 goto PP7
 ) else (
 goto PP8
 )
 :PP7
-	echo CONFORME -La couche N_PRESCRIPTION_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP
 :PP8
@@ -2527,17 +2517,17 @@ goto PP9
 goto PP10
 )
 :PP9
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP 
 :PP10
-IF EXIST "%dg%\N_PRESCRIPTION_PCT_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_PCT_%insee%_%dep%.tab" ( 
 goto PP11
 ) else (
 goto PP12
 )
 :PP11
-	echo CONFORME -La couche N_PRESCRIPTION_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP
 :PP12
@@ -2547,17 +2537,17 @@ goto PP13
 goto PP14
 )
 :PP13
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP	
 :PP14
-IF EXIST "%dg%\N_PRESCRIPTION_PCT_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_PRESCRIPTION_PCT_%insee%_%dep%.mif" ( 
 goto PP15
 ) else (
 goto PP16
 )
 :PP15
-	echo CONFORME -La couche N_PRESCRIPTION_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_PRESCRIPTION_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP
 :PP16
@@ -2567,11 +2557,11 @@ goto PP17
 goto NOPP
 )
 :PP17
-	echo ---ERREURdg -La couche est ‡ renommer : N_PRESCRIPTION_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_PRESCRIPTION_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenPP 
 :NOPP
-	echo ----La couche N_PRESCRIPTION_PCT_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_PRESCRIPTION_PCT_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto ISURF
@@ -2579,22 +2569,22 @@ goto NOPP
 rem ===============================================================================================================================================================
 rem 3.4.2 CONTROLE PROJECTION et ENCODAGE PRESCRIPTION_PCT :
 rem ===============================================================================================================================================================
-: OpenPP
+:OpenPP
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_PCT_%insee%_038 :
+echo *N_PRESCRIPTION_PCT_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpPP= "La couche %PP% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_PCT_%insee%_038 :
+echo *N_PRESCRIPTION_PCT_%insee%_%dep% :
 
 IF "%OpPP%"=="o" (goto OPP) else goto StructurePP
 
-: OPP
+:OPP
 rem ouverture de la couche PP dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%PP%"
@@ -2605,22 +2595,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvPP="La couche %PP% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvPP%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ4="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ4%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 93, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO4="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO4%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ. >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem4="Remarque(s) : "
  IF NOT "%Rem4%"=="" (
- echo -----**REMARQUES : "%Rem4%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem4%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -2641,22 +2631,22 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_4_controle_structure_pp.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_prescription_pct dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_pp) to STDOUT" > %ES%\%insee%_erreurs_structure_prescription_pct.txt
 
-rem table erreur_structure_prescription_pct dÈplacÈe vers dossier Erreurs_structure
+rem table erreur_structure_prescription_pct d√©plac√©e vers dossier Erreurs_structure
 rem move "%PGDATA%\%insee%_erreurs_structure_prescription_pct.txt" "%ES%"
 
 rem decompte des lignes erreurs dans erreurs_structure_prescription_pct.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_prescription_pct.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_prescription_pct.txt ^|find /i /c "ERREUR"`) do (
 set structurePP=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE5 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE5 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -2669,29 +2659,32 @@ IF %structurePP%==0 (goto StructurePPok) else goto StructurePPnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_PCT_%insee%_038 :
+echo *N_PRESCRIPTION_PCT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
-echo %structurePP% erreurs.
+echo %structurePP% erreur(s).
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_PRESCRIPTION_PCT_%insee%_038 comporte 8 champs :>> %rappconf%  
-echo        LIBELLE (varchar 254)/TXT (varchar 10)/TYPEPSC (varchar 2)>> %rappconf% 
-echo        NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf% 
-echo        DATAPPRO (date)/DATVALID (date)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL COVADIS : La couche N_PRESCRIPTION_LIN_%insee%_%dep% comporte 8 champs :   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 10) ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEPSC (varchar 2)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80) ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254) ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATAPPRO (date) ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATVALID (date)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structurePP% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structurePP% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_prescription_pct.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_prescription_pct.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
-echo.>> %rappconf%
-echo.>> %rappconf% 
+echo. >> %rappconf%
+echo. >> %rappconf% 
 echo.
 pause
 goto ISURF 
@@ -2701,38 +2694,32 @@ del %ES%\%insee%_erreurs_structure_prescription_pct.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_PRESCRIPTION_PCT_%insee%_038 :
+echo *N_PRESCRIPTION_PCT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%     
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
-rem ===============================================================================================================================================================
-
-
-
 
 rem ===============================================================================================================================================================
 rem 3.5.0 TEST INFO_SURF:
 rem ===============================================================================================================================================================
-: ISURF
-del ListePresc_%insee%.txt
+
+:ISURF
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
-echo **N_INFO_SURF_%insee%_038 :*******************************************************>> %rappconf%
+echo *N_INFO_SURF_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.5 Contr√¥le de la couche N_INFO_SURF_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
-
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%r in ('type ListeDG_%insee%.txt ^| find /i "INF"') do (
 echo %%r >> ListeInf_%insee%.txt
 move "%%r" "%dg%"
 )
-
 for /f %%s in ('type ListeInf_%insee%.txt ^| find /i "SURF"') do (
 set ISnom=%%~ns
 )
@@ -2741,18 +2728,18 @@ rem recherche du format et ajout de l'extension au nom:
 IF EXIST "%dg%\%ISnom%.shp" ( 
 set IS=%ISnom%.shp
 goto NomIS
-)
+) ELSE (
 IF EXIST "%dg%\%ISnom%.tab" ( 
 set IS=%ISnom%.tab
 goto NomIS
-)
+) ELSE (
 IF EXIST "%dg%\%ISnom%.mif" ( 
 pause
 set IS=%ISnom%.mif
 goto NomIS
-)
+) ELSE (
 goto NOIS
-
+)))
 rem ===============================================================================================================================================================
 rem 3.5.1 CONTROLE NOMMAGE INFO_SURF: 
 rem ===============================================================================================================================================================
@@ -2763,7 +2750,7 @@ goto IS1
 goto IS2
 )
 :IS1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS 
 :IS2
@@ -2773,7 +2760,7 @@ goto IS3
 goto IS4
 )
 :IS3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS
 :IS4
@@ -2783,17 +2770,17 @@ goto IS5
 goto IS6
 )
 :IS5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS 
 :IS6
-IF EXIST "%dg%\N_INFO_SURF_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_INFO_SURF_%insee%_%dep%.shp" ( 
 goto IS7
 ) else (
 goto IS8
 )
 :IS7
-	echo CONFORME -La couche N_INFO_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS
 :IS8
@@ -2803,17 +2790,17 @@ goto IS9
 goto IS10
 )
 :IS9
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS 
 :IS10
-IF EXIST "%dg%\N_INFO_SURF_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_INFO_SURF_%insee%_%dep%.tab" ( 
 goto IS11
 ) else (
 goto IS12
 )
 :IS11
-	echo CONFORME -La couche N_INFO_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS
 :IS12
@@ -2823,17 +2810,17 @@ goto IS13
 goto IS14
 )
 :IS13
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS	
 :IS14
-IF EXIST "%dg%\N_INFO_SURF_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_INFO_SURF_%insee%_%dep%.mif" ( 
 goto IS15
 ) else (
 goto IS16
 )
 :IS15
-	echo CONFORME -La couche N_INFO_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS
 :IS16
@@ -2843,11 +2830,11 @@ goto IS17
 goto NOIS
 )
 :IS17
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIS 
 :NOIS
-	echo ----La couche N_INFO_SURF_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_INFO_SURF_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto ILIN
@@ -2855,22 +2842,22 @@ goto NOIS
 rem ===============================================================================================================================================================
 rem 3.5.2 CONTROLE PROJECTION et ENCODAGE INFO_SURF :
 rem ===============================================================================================================================================================
-: OpenIS
+:OpenIS
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
+echo *N_INFO_SURF_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpIS= "La couche %IS% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
+echo *N_INFO_SURF_%insee%_%dep% :
 
 IF "%OpIS%"=="o" (goto OIS) else goto StructureIS
 
-: OIS
+:OIS
 rem ouverture de la couche IS dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%IS%"
@@ -2881,22 +2868,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvIS="La couche %IS% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvIS%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ5="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ5%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO5="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO5%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem5="Remarque(s) : "
  IF NOT "%Rem5%"=="" (
- echo -----**REMARQUES : "%Rem5%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem5%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -2917,21 +2904,21 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_5_controle_structure_is.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_info_surf dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_is) to STDOUT" > %ES%\%insee%_erreurs_structure_info_surf.txt
 
-rem table erreur_structure_info_surf dÈplacÈe vers dossier Erreurs_structure
+rem table erreur_structure_info_surf d√©plac√©e vers dossier Erreurs_structure
 rem move "%PGDATA%\%insee%_erreurs_structure_info_surf.txt" "%ES%"
 
 rem decompte des lignes erreurs dans erreurs_structure_info_surf.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_surf.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_surf.txt ^|find /i /c "ERREUR"`) do (
 set structureIS=%%u
 )
 rem =============================================================================================================================================================
-rem PAUSE6 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE6 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -2943,25 +2930,27 @@ IF %structureIS%==0 (goto StructureISok) else goto StructureISnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
+echo *N_INFO_SURF_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureIS% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_INFO_SURF_%insee%_038 comporte 6 champs :>> %rappconf%  
-echo        LIBELLE (varchar 254)/TXT (varchar 10)/TYPINF (varchar 2)>> %rappconf% 
-echo        NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL : La couche N_INFO_SURF_%insee%_%dep% comporte 6 champs :   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 10)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPINF (varchar 2)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureIS% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureIS% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_surf.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_surf.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -2974,12 +2963,12 @@ del %ES%\%insee%_erreurs_structure_info_surf.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
+echo *N_INFO_SURF_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%  
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -2991,15 +2980,15 @@ rem ============================================================================
 rem ===============================================================================================================================================================
 rem 3.6.0 TEST INFO_LIN :
 rem ===============================================================================================================================================================
-: ILIN
+:ILIN
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
-echo **N_INFO_LIN_%insee%_038 :********************************************************>> %rappconf%
+echo *N_INFO_LIN_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.6 Contr√¥le de la couche N_INFO_LIN_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListeINF_%insee%.txt ^| find /i "LIN"') do (
 set ILnom=%%~ns
 )
@@ -3008,18 +2997,18 @@ rem recherche du format et ajout de l'extension au nom:
 IF EXIST "%dg%\%ILnom%.shp" ( 
 set IL=%ILnom%.shp
 goto NomIL
-)
+) ELSE (
 IF EXIST "%dg%\%ILnom%.tab" ( 
 set IL=%ILnom%.tab
 goto NomIL
-)
+) ELSE (
 IF EXIST "%dg%\%ILnom%.mif" ( 
 pause
 set IL=%ILnom%.mif
 goto NomIL
-)
+) ELSE (
 goto NOIL
-
+)))
 rem ===============================================================================================================================================================
 rem 3.6.1 CONTROLE NOMMAGE INFO_LIN: 
 rem ===============================================================================================================================================================
@@ -3030,7 +3019,7 @@ goto IL1
 goto IL2
 )
 :IL1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL 
 :IL2
@@ -3040,7 +3029,7 @@ goto IL3
 goto IL4
 )
 :IL3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL
 :IL4
@@ -3050,17 +3039,17 @@ goto IL5
 goto IL6
 )
 :IL5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL 
 :IL6
-IF EXIST "%dg%\N_INFO_LIN_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_INFO_LIN_%insee%_%dep%.shp" ( 
 goto IL7
 ) else (
 goto IL8
 )
 :IL7
-	echo CONFORME -La couche N_INFO_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL
 :IL8
@@ -3070,17 +3059,17 @@ goto IL9
 goto IL10
 )
 :IL9
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL 
 :IL10
-IF EXIST "%dg%\N_INFO_LIN_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_INFO_LIN_%insee%_%dep%.tab" ( 
 goto IL11
 ) else (
 goto IL12
 )
 :IL11
-	echo CONFORME -La couche N_INFO_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL
 :IL12
@@ -3090,17 +3079,17 @@ goto IL13
 goto IL14
 )
 :IL13
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL	
 :IL14
-IF EXIST "%dg%\N_INFO_LIN_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_INFO_LIN_%insee%_%dep%.mif" ( 
 goto IL15
 ) else (
 goto IL16
 )
 :IL15
-	echo CONFORME -La couche N_INFO_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL
 :IL16
@@ -3110,11 +3099,11 @@ goto IL17
 goto NOIL
 )
 :IL17
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIL 
 :NOIL
-	echo ----La couche N_INFO_LIN_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_INFO_LIN_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto IPCT
@@ -3122,22 +3111,22 @@ goto NOIL
 rem ===============================================================================================================================================================
 rem 3.6.2 CONTROLE PROJECTION et ENCODAGE INFO_LIN :
 rem ===============================================================================================================================================================
-: OpenIL
+:OpenIL
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
+echo *N_INFO_LIN_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpIL= "La couche %IL% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
+echo *N_INFO_LIN_%insee%_%dep% :
 
 IF "%OpIL%"=="o" (goto OIL) else goto StructureIL
 
-: OIL
+:OIL
 rem ouverture de la couche IL dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%IL%"
@@ -3148,22 +3137,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvIL="La couche %IL% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvIL%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ6="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ6%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 93, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO6="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO6%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ. >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem6="Remarque(s) : "
  IF NOT "%Rem6%"=="" (
- echo -----**REMARQUES : "%Rem6%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem6%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -3176,7 +3165,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECILION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln info_LIN "%dg%\%IL%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln info_LIN "%dg%\%IL%"
 echo.
 echo ...fin
 echo.
@@ -3184,22 +3173,22 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_6_controle_structure_il.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_info_lin dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_il) to STDOUT" > %ES%\%insee%_erreurs_structure_info_lin.txt
 
-rem table erreur_structure_info_lin dÈplacÈe vers dossier Erreurs_structure
+rem table erreur_structure_info_lin d√©plac√©e vers dossier Erreurs_structure
 rem move "%PGDATA%\%insee%_erreurs_structure_info_lin.txt" "%ES%"
 
 rem decompte des lignes erreurs dans erreurs_structure_info_lin.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_lin.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_lin.txt ^|find /i /c "ERREUR"`) do (
 set structureIL=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE7 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE7 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -3212,25 +3201,28 @@ IF %structureIL%==0 (goto StructureILok) else goto StructureILnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
+echo *N_INFO_LIN_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureIL% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_INFO_LIN_%insee%_038 comporte 6 champs :>> %rappconf%  
-echo        LIBELLE (varchar 254)/TXT (varchar 10)/TYPINF (varchar 2)>> %rappconf% 
-echo        NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL : La couche N_INFO_LIN_%insee%_%dep% comporte 6 champs :   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 10)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPINF (varchar 2)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
+
 echo. >> %rappconf% 
-echo %structureIL% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureIL% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_lin.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_lin.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -3243,12 +3235,12 @@ del %ES%\%insee%_erreurs_structure_info_lin.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
+echo *N_INFO_LIN_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%  
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -3260,15 +3252,15 @@ rem ============================================================================
 rem ===============================================================================================================================================================
 rem 3.7.0 TEST INFO_PCT :
 rem ===============================================================================================================================================================
-: IPCT
+:IPCT
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
-echo **N_INFO_PCT_%insee%_038 :********************************************************>> %rappconf%
+echo *N_INFO_PCT_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.7 Contr√¥le de la couche N_INFO_PCT_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListeINF_%insee%.txt ^| find /i "PCT"') do (
 set IPnom=%%~ns
 )
@@ -3277,18 +3269,18 @@ rem recherche du format et ajout de l'extension au nom:
 IF EXIST "%dg%\%IPnom%.shp" ( 
 set IP=%IPnom%.shp
 goto NomIP
-)
+) ELSE (
 IF EXIST "%dg%\%IPnom%.tab" ( 
 set IP=%IPnom%.tab
 goto NomIP
-)
+) ELSE (
 IF EXIST "%dg%\%IPnom%.mif" ( 
 pause
 set IP=%IPnom%.mif
 goto NomIP
-)
+) ELSE (
 goto NOIP
-
+)))
 rem ===============================================================================================================================================================
 rem 3.7.1 CONTROLE NOMMAGE INFO_PCT: 
 rem ===============================================================================================================================================================
@@ -3299,7 +3291,7 @@ goto IP1
 goto IP2
 )
 :IP1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP 
 :IP2
@@ -3309,7 +3301,7 @@ goto IP3
 goto IP4
 )
 :IP3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP
 :IP4
@@ -3319,17 +3311,17 @@ goto IP5
 goto IP6
 )
 :IP5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP 
 :IP6
-IF EXIST "%dg%\N_INFO_PCT_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_INFO_PCT_%insee%_%dep%.shp" ( 
 goto IP7
 ) else (
 goto IP8
 )
 :IP7
-	echo CONFORME -La couche N_INFO_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP
 :IP8
@@ -3339,17 +3331,17 @@ goto IP9
 goto IP10
 )
 :IP9
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP 
 :IP10
-IF EXIST "%dg%\N_INFO_PCT_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_INFO_PCT_%insee%_%dep%.tab" ( 
 goto IP11
 ) else (
 goto IP12
 )
 :IP11
-	echo CONFORME -La couche N_INFO_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP
 :IP12
@@ -3359,17 +3351,17 @@ goto IP13
 goto IP14
 )
 :IP13
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP	
 :IP14
-IF EXIST "%dg%\N_INFO_PCT_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_INFO_PCT_%insee%_%dep%.mif" ( 
 goto IP15
 ) else (
 goto IP16
 )
 :IP15
-	echo CONFORME -La couche N_INFO_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP
 :IP16
@@ -3379,11 +3371,11 @@ goto IP17
 goto NOIP
 )
 :IP17
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIP 
 :NOIP
-	echo ----La couche N_INFO_PCT_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_INFO_PCT_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto HSURF
@@ -3391,22 +3383,22 @@ goto NOIP
 rem ===============================================================================================================================================================
 rem 3.7.2 CONTROLE PROJECTION et ENCODAGE INFO_PCT :
 rem ===============================================================================================================================================================
-: OpenIP
+:OpenIP
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
+echo *N_INFO_PCT_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpIP= "La couche %IP% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
+echo *N_INFO_PCT_%insee%_%dep% :
 
 IF "%OpIP%"=="o" (goto OIP) else goto StructureIP
 
-: OIP
+:OIP
 rem ouverture de la couche IP dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%IP%"
@@ -3417,22 +3409,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvIP="La couche %IP% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvIP%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ7="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ7%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 93, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO7="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO7%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem7="Remarque(s) : "
  IF NOT "%Rem7%"=="" (
- echo -----**REMARQUES : "%Rem7%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem7%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -3445,7 +3437,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECIPION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln info_pct "%dg%\%IP%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln info_pct "%dg%\%IP%"
 echo.
 echo ...fin
 echo.
@@ -3453,22 +3445,22 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_7_controle_structure_ip.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_info_pct dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_ip) to STDOUT" > %ES%\%insee%_erreurs_structure_info_pct.txt
 
-rem table erreur_structure_info_pct dÈplacÈe vers dossier Erreurs_structure
+rem table erreur_structure_info_pct d√©plac√©e vers dossier Erreurs_structure
 rem move "%PGDATA%\%insee%_erreurs_structure_info_pct.txt" "%ES%"
 
 rem decompte des lignes erreurs dans erreurs_structure_info_pct.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_pct.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_pct.txt ^|find /i /c "ERREUR"`) do (
 set structureIP=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE8 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE8 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -3482,25 +3474,27 @@ del ListeInf_%insee%.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
+echo *N_INFO_PCT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureIP% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo -RAPPEL COVADIS : La couche N_INFO_PCT_%insee%_038 comporte 6 champs :>> %rappconf%  
-echo        LIBELLE (varchar 254)/TXT (varchar 10)/TYPINF (varchar 2)>> %rappconf% 
-echo        NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL : La couche N_INFO_PCT_%insee%_%dep% comporte 6 champs :   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 10)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPINF (varchar 2)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)   ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureIP% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureIP% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_pct.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_pct.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -3514,12 +3508,12 @@ del %ES%\%insee%_erreurs_structure_info_pct.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
+echo *N_INFO_PCT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%  
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -3529,15 +3523,15 @@ rem ============================================================================
 
 
 
-: SecteurCC
+:SecteurCC
 rem ===============================================================================================================================================================
 rem 3.1.0bis TEST SECTEUR_CC : (CC)
 rem ===============================================================================================================================================================
-echo *N_SECTEUR_CC_%insee%_038 :
-echo **N_SECTEUR_CC_%insee%_038 :*******************************************************>> %rappconf%
+echo *N_SECTEUR_CC_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.1 Contr√¥le de la couche N_SECTEUR_CC_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%q in ('type ListeDG_%insee%.txt ^| find /i "SECTEUR"') do (
 set SCCnom=%%~nq
 move "%%q" "%dg%"
@@ -3569,7 +3563,7 @@ goto SCC1
 goto SCC2
 )
 :SCC1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC 
 :SCC2
@@ -3579,7 +3573,7 @@ goto SCC3
 goto SCC4
 )
 :SCC3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC
 :SCC4
@@ -3589,17 +3583,17 @@ goto SCC5
 goto SCC6
 )
 :SCC5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC 
 :SCC6
-IF EXIST "%dg%\N_SECTEUR_CC_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_SECTEUR_CC_%insee%_%dep%.shp" ( 
 goto SCC7
 ) else (
 goto SCC8
 )
 :SCC7
-	echo CONFORME -La couche N_SECTEUR_CC_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_SECTEUR_CC_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC
 :SCC8
@@ -3609,17 +3603,17 @@ goto SCC9
 goto SCC10
 )
 :SCC9
-	echo ---ERREURdg -La couche est ‡ renommer : N_SECTEUR_CC_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_SECTEUR_CC_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC 
 :SCC10
-IF EXIST "%dg%\N_SECTEUR_CC_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_SECTEUR_CC_%insee%_%dep%.tab" ( 
 goto SCC11
 ) else (
 goto SCC12
 )
 :SCC11
-	echo CONFORME -La couche N_SECTEUR_CC_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_SECTEUR_CC_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC
 :SCC12
@@ -3629,17 +3623,17 @@ goto SCC13
 goto SCC14
 )
 :SCC13
-	echo ---ERREURdg -La couche est ‡ renommer : N_SECTEUR_CC_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_SECTEUR_CC_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC	
 :SCC14
-IF EXIST "%dg%\N_SECTEUR_CC_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_SECTEUR_CC_%insee%_%dep%.mif" ( 
 goto SCC15
 ) else (
 goto SCC16
 )
 :SCC15
-	echo CONFORME -La couche N_SECTEUR_CC_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_SECTEUR_CC_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC
 :SCC16
@@ -3649,11 +3643,11 @@ goto SCC17
 goto NOSCC
 )
 :SCC17
-	echo ---ERREURdg -La couche est ‡ renommer : N_SECTEUR_CC_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_SECTEUR_CC_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenSCC 
 :NOSCC
-	echo ----La couche N_SECTEUR_CC_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_SECTEUR_CC_%insee%_%dep% n'a pas √©t√© livr√©e. ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto ISURFbis
@@ -3661,22 +3655,22 @@ goto NOSCC
 rem ===============================================================================================================================================================
 rem 3.1.2bis CONTROLE PROJECTION et ENCODAGE SECTEUR_CC :
 rem ===============================================================================================================================================================
-: OpenSCC
+:OpenSCC
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_SECTEUR_CC_%insee%_038 :
+echo *N_SECTEUR_CC_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpSCC= "La couche %SCC% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_SECTEUR_CC_%insee%_038 :
+echo *N_SECTEUR_CC_%insee%_%dep% :
 
 IF "%OpSCC%"=="o" (goto OSCC) else goto TopoSCC
 
-: OSCC
+:OSCC
 rem ouverture de la couche SCC dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%SCC%"
@@ -3687,29 +3681,29 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvSCC="La couche %SCC% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvSCC%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ1bis="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ1bis%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 93, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO1bis="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO1bis%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ. >> %rappconf% 
+ echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem1bis="Remarque(s) : "
  IF NOT "%Rem1bis%"=="" (
- echo -----**REMARQUES : "%Rem1bis%" >> %rappconf% 
+ echo ^<font color="blue"^>REMARQUE :"%Rem1bis%"  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
 
 rem ===============================================================================================================================================================
 rem 3.1.3bis CONTROLE TOPOLOGIQUE SECTEUR_CC :
 rem ===============================================================================================================================================================
-: TopoSCC
+:TopoSCC
 rem IMPORT DE LA COUCHE shape SECTEUR_CC DS POSTGRE:
 rem --------------------------------------------------------------------------------------------
 echo.
@@ -3723,7 +3717,7 @@ rem pause
 
 echo * Controle topologique...
 echo.
-rem creation de la table des gÈomÈtries invalides :
+rem creation de la table des g√©om√©tries invalides :
 rem --------------------------------------------------------------------------------------------
 echo 	*Detection des geometries invalides :
 echo.
@@ -3758,13 +3752,13 @@ rem ----------------------------------------------------------------------------
  del "%ET%\%insee%_geom_invalid.shx"
  )
  
- :CHEVbis
+:CHEVbis
 rem creation de la table des chevauchements :
 rem --------------------------------------------------------------------------------------------
 cls
 echo Controle des donnees geographiques...
  echo.
- echo *N_SECTEUR_CC_%insee%_038 :
+ echo *N_SECTEUR_CC_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -3802,13 +3796,13 @@ rem ----------------------------------------------------------------------------
  )
 
  
- :TROUbis
+:TROUbis
 rem creation de la table des trous :
 rem --------------------------------------------------------------------------------------------
 cls
  echo Controle des donnees geographiques...
  echo.
- echo *N_SECTEUR_CC_%insee%_038 :
+ echo *N_SECTEUR_CC_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -3846,13 +3840,13 @@ rem ----------------------------------------------------------------------------
  )
 
  
- :DECAbis
+:DECAbis
 rem creation de la table des decalages_sections selon le referentiel IGN ou PCI (PCI par defaut):
 rem --------------------------------------------------------------------------------------------
 cls
 echo Controle des donnees geographiques...
  echo.
- echo *N_ZONE_URBA_%insee%_038 :
+ echo *N_ZONE_URBA_%insee%_%dep% :
  echo.
  echo Controle topologique...
  echo.
@@ -3893,7 +3887,7 @@ rem ----------------------------------------------------------------------------
  )
  
 
-: FinTopoSCC
+:FinTopoSCC
 rem liste shape erreurs topo :
 rem ------------------------------------------------------------------------------------------------
 dir n/b/s Erreurs_topo\*.shp > liste_couches_erreurs_topo_%insee%.txt
@@ -3910,23 +3904,22 @@ IF %toposhp%==0 (goto TopoOKSCC) else goto ErreurTopoSCC
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_SECTEUR_CC_%insee%_038 :
+echo *N_SECTEUR_CC_%insee%_%dep% :
 echo Controle topologique ...
 echo         ...fin controle topologique.
 echo ------------------------------------
 echo *TOPO NON CONFORME*
 echo %toposhpSCC% couches erreurs.
 
-echo -----**ERREURdg-TOPOLOGIE NON-CONFORME: >> %rappconf% 
+echo ^<font color="red"^>ERREUR : TOPOLOGIE NON-CONFORME:   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo RAPPEL COVADIS : blalkjaaaaaqsfhilauzfhlksjdhfiuezrglkjsdhfiuhrsfjdfnierzuhd >> %rappconf% 
-echo. >> %rappconf% 
-echo %toposhpSCC% Couches erreurs topo: >> %rappconf% 
+echo ^<font color="red"^>%toposhpSCC% couche(s) avec au moins une erreur de topologie : ^</font^>^</br^> >> %rappconf%
+echo ^<font color="red"^>Couche(s) erreurs g√©n√©r√©es dans le r√©pertoire %ET% pour v√©rification : ^</br^> >> %rappconf% 
 rem extraction de la liste des couches erreurs avec nomfichier+extension :
 for /F %%y in ('type liste_couches_erreurs_topo_%insee%.txt ^|find /i "shp"') do (
-echo          %%~nxy >> %rappconf%
+echo ^<blockquote^> %%~nxy^</blockquote^> ^</br^>   >> %rappconf%
 )
-echo. >> %rappconf% 
+echo ^</font^>  >> %rappconf% 
 echo.
 pause
 goto StructureSCC
@@ -3935,12 +3928,12 @@ goto StructureSCC
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_SECTEUR_CC_%insee%_038 :
+echo *N_SECTEUR_CC_%insee%_%dep% :
 echo Controle topologique ...
 echo         ...fin controle topologique.
 echo ------------------------------------
-echo *TOPO CONFORME*
-echo -----**TOPOLOGIE CONFORME. >> %rappconf%              
+echo *TOPOLOGIE CONFORME*
+echo ^<font color="green"^>CONFORME : TOPOLOGIE CONFORME.   ^</font^>^</br^>   >> %rappconf%                
 echo. >> %rappconf% 
 pause
 
@@ -3952,22 +3945,22 @@ del liste_couches_erreurs_topo_%insee%.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_SECTEUR_CC_%insee%_038 :
+echo *N_SECTEUR_CC_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_1bis_controle_structure_scc.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_zone_urba dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_scc) to STDOUT" > %ES%\%insee%_erreurs_structure_secteur_cc.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_secteur_cc.txt :
-for /F "usebackq" %%t in (`type %ES%\%insee%_erreurs_structure_secteur_cc.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%t in (`type %ES%\%insee%_erreurs_structure_secteur_cc.txt ^|find /i /c "ERREUR"`) do (
 set structureSCC=%%t
 )
 
 rem =============================================================================================================================================================
-rem PAUSE2bis pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE2bis pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -3980,27 +3973,32 @@ IF %structureSCC%==0 (goto StructureSCCok) else goto StructureSCCnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_SECTEUR_CC_%insee%_038 :
+echo *N_SECTEUR_CC_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureSCC% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_SECTEUR_CC_%insee%_038 comporte 10 champs :>> %rappconf%  
-echo        IDURBA (varchar 20)/LIBELLE (varchar 254)/TYPESECT (varchar 3)/>> %rappconf% 
-echo        FERMRECO (varchar 3)/DESTDOMI (varchar 2)/NOMFIC (varchar 80)/>> %rappconf% 
-echo        URLFIC (varchar 254)/INSEE (varchar 5)/DATAPPRO (date)/DATVALID (date)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL : La couche N_SECTEUR_CC_%insee%_%dep% comporte 10 champs :   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>IDURBA (varchar 20)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPESECT (varchar 3)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>FERMRECO (varchar 3)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DESTDOMI (varchar 2)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATAPPRO (date)   ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATVALID (date)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureSCC% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureSCC% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 
 rem liste des erreurs dans rapport :
-for /F "delims=" %%y in ('type %ES%\%insee%_erreurs_structure_secteur_cc.txt ^|find /i "ERREURdg"') do (
-echo    %%y >> %rappconf%
+for /F "delims=" %%y in ('type %ES%\%insee%_erreurs_structure_secteur_cc.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%y^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf% 
 echo.>> %rappconf% 
@@ -4013,12 +4011,12 @@ del %ES%\%insee%_erreurs_structure_secteur_cc.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_SECTEUR_CC_%insee%_038 :
+echo *N_SECTEUR_CC_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME. >> %rappconf%              
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%                
 echo.>> %rappconf% 
 echo.>> %rappconf% 
 pause
@@ -4028,14 +4026,14 @@ pause
 rem ===============================================================================================================================================================
 rem 3.5.0bis TEST INFO_SURF: (CC)
 rem ===============================================================================================================================================================
-: ISURFbis
+:ISURFbis
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
-echo **N_INFO_SURF_%insee%_038 :*******************************************************>> %rappconf%
+echo *N_INFO_SURF_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.5 Contr√¥le de la couche N_INFO_SURF_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%r in ('type ListeDG_%insee%.txt ^| find /i "INF"') do (
 echo %%r >> ListeInf_%insee%.txt
 move "%%r" "%dg%"
@@ -4071,7 +4069,7 @@ goto ISbis1
 goto ISbis2
 )
 :ISbis1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis 
 :ISbis2
@@ -4081,7 +4079,7 @@ goto ISbis3
 goto ISbis4
 )
 :ISbis3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis
 :ISbis4
@@ -4091,17 +4089,17 @@ goto ISbis5
 goto ISbis6
 )
 :ISbis5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis 
 :ISbis6
-IF EXIST "%dg%\N_INFO_SURF_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_INFO_SURF_%insee%_%dep%.shp" ( 
 goto ISbis7
 ) else (
 goto ISbis8
 )
 :ISbis7
-	echo CONFORME -La couche N_INFO_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis
 :ISbis8
@@ -4111,17 +4109,17 @@ goto ISbis9
 goto ISbis10
 )
 :ISbis9
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis 
 :ISbis10
-IF EXIST "%dg%\N_INFO_SURF_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_INFO_SURF_%insee%_%dep%.tab" ( 
 goto ISbis11
 ) else (
 goto ISbis12
 )
 :ISbis11
-	echo CONFORME -La couche N_INFO_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis
 :ISbis12
@@ -4131,17 +4129,17 @@ goto ISbis13
 goto ISbis14
 )
 :ISbis13
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis	
 :ISbis14
-IF EXIST "%dg%\N_INFO_SURF_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_INFO_SURF_%insee%_%dep%.mif" ( 
 goto ISbis15
 ) else (
 goto ISbis16
 )
 :ISbis15
-	echo CONFORME -La couche N_INFO_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis
 :ISbis16
@@ -4151,11 +4149,11 @@ goto ISbis17
 goto NOISbis
 )
 :ISbis17
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenISbis 
 :NOISbis
-	echo ----La couche N_INFO_SURF_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche N_INFO_SURF_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto ILINbis
@@ -4164,22 +4162,22 @@ goto NOISbis
 rem ===============================================================================================================================================================
 rem 3.5.2bis CONTROLE PROJECTION et ENCODAGE INFO_SURF :
 rem ===============================================================================================================================================================
-: OpenISbis
+:OpenISbis
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
+echo *N_INFO_SURF_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpIS= "La couche %IS% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
+echo *N_INFO_SURF_%insee%_%dep% :
 
 IF "%OpIS%"=="o" (goto OISbis) else goto StructureISbis
 
-: OISbis
+:OISbis
 rem ouverture de la couche IS dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%IS%"
@@ -4190,22 +4188,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvIS="La couche %IS% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvIS%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ5bis="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ5bis%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO5bis="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO5bis%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem5bis="Remarque(s) : "
  IF NOT "%Rem5bis%"=="" (
- echo -----**REMARQUES : "%Rem5bis%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem5bis%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -4226,19 +4224,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_5bis_controle_structure_is_cc.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_info_surf_cc dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_is) to STDOUT" > %ES%\%insee%_erreurs_structure_info_surf_cc.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_info_surf_cc.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_surf_cc.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_surf_cc.txt ^|find /i /c "ERREUR"`) do (
 set structureISCC=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE6bis pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE6bis pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -4251,25 +4249,28 @@ IF %structureISCC%==0 (goto StructureISokCC) else goto StructureISnokCC
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
+echo *N_INFO_SURF_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureISCC% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_INFO_SURF_%insee%_038 comporte 7 champs :>> %rappconf%  
-echo        LIBELLE (varchar 254)/TXT (varchar 10)/TYPEI (varchar 2)/TYPEP (varchar 2)>> %rappconf% 
-echo        NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL COVADIS : La couche N_INFO_SURF_%insee%_%dep% comporte 7 champs :  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 10)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEI (varchar 2)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEP (varchar 2)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureISCC% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureISCC% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_surf_cc.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_surf_cc.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%y^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -4282,12 +4283,12 @@ del %ES%\%insee%_erreurs_structure_info_surf_cc.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_SURF_%insee%_038 :
+echo *N_INFO_SURF_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf% 
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -4295,15 +4296,15 @@ pause
 rem ===============================================================================================================================================================
 rem 3.6.0bis TEST INFO_LIN : (CC)
 rem ===============================================================================================================================================================
-: ILINbis
+:ILINbis
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
-echo **N_INFO_LIN_%insee%_038 :********************************************************>> %rappconf%
+echo *N_INFO_LIN_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.6 Contr√¥le de la couche N_INFO_LIN_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListeInf_%insee%.txt ^| find /i "LIN"') do (
 set ILnom=%%~ns
 )
@@ -4334,7 +4335,7 @@ goto ILbis1
 goto ILbis2
 )
 :ILbis1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis 
 :ILbis2
@@ -4344,7 +4345,7 @@ goto ILbis3
 goto ILbis4
 )
 :ILbis3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis
 :ILbis4
@@ -4354,17 +4355,17 @@ goto ILbis5
 goto ILbis6
 )
 :ILbis5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis 
 :ILbis6
-IF EXIST "%dg%\N_INFO_LIN_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_INFO_LIN_%insee%_%dep%.shp" ( 
 goto ILbis7
 ) else (
 goto ILbis8
 )
 :ILbis7
-	echo CONFORME -La couche N_INFO_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis
 :ILbis8
@@ -4374,17 +4375,17 @@ goto ILbis9
 goto ILbis10
 )
 :ILbis9
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis 
 :ILbis10
-IF EXIST "%dg%\N_INFO_LIN_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_INFO_LIN_%insee%_%dep%.tab" ( 
 goto ILbis11
 ) else (
 goto ILbis12
 )
 :ILbis11
-	echo CONFORME -La couche N_INFO_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis
 :ILbis12
@@ -4394,17 +4395,17 @@ goto ILbis13
 goto ILbis14
 )
 :ILbis13
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis	
 :ILbis14
-IF EXIST "%dg%\N_INFO_LIN_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_INFO_LIN_%insee%_%dep%.mif" ( 
 goto ILbis15
 ) else (
 goto ILbis16
 )
 :ILbis15
-	echo CONFORME -La couche N_INFO_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_LIN_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis
 :ILbis16
@@ -4414,11 +4415,11 @@ goto ILbis17
 goto NOILbis
 )
 :ILbis17
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_LIN_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenILbis 
 :NOILbis
-	echo ----La couche N_INFO_LIN_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_INFO_LIN_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto IPCTbis
@@ -4426,22 +4427,22 @@ goto NOILbis
 rem ===============================================================================================================================================================
 rem 3.6.2bis CONTROLE PROJECTION et ENCODAGE INFO_LIN :
 rem ===============================================================================================================================================================
-: OpenILbis
+:OpenILbis
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
+echo *N_INFO_LIN_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpIL= "La couche %IL% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
+echo *N_INFO_LIN_%insee%_%dep% :
 
 IF "%OpIL%"=="o" (goto OILbis) else goto StructureILbis
 
-: OILbis
+:OILbis
 rem ouverture de la couche IL dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%IL%"
@@ -4452,22 +4453,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvIL="La couche %IL% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvIL%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ6bis="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ6bis%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO6bis="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO6bis%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem6bis="Remarque(s) : "
  IF NOT "%Rem6bis%"=="" (
- echo -----**REMARQUES : "%Rem6bis%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem6bis%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -4480,7 +4481,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECILION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln info_lin "%dg%\%IL%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln info_lin "%dg%\%IL%"
 echo.
 echo ...fin
 echo.
@@ -4488,19 +4489,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_6bis_controle_structure_il_cc.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_info_lin_cc dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_il) to STDOUT" > %ES%\%insee%_erreurs_structure_info_lin_cc.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_info_lin_cc.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_lin_cc.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_lin_cc.txt ^|find /i /c "ERREUR"`) do (
 set structureILCC=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE7bis pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE7bis pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -4513,25 +4514,28 @@ IF %structureILCC%==0 (goto StructureILokCC) else goto StructureILnokCC
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
+echo *N_INFO_LIN_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureILCC% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf%
-echo -RAPPEL COVADIS : La couche N_INFO_LIN_%insee%_038 comporte 7 champs :>> %rappconf%  
-echo        LIBELLE (varchar 254)/TXT (varchar 10)/TYPEI (varchar 2)/TYPEP (varchar 2)>> %rappconf% 
-echo        NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL COVADIS : La couche N_INFO_LIN_%insee%_%dep% comporte 7 champs :  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 10)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEI (varchar 2)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEP (varchar 2)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureILCC% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureILCC% erreur(s) de structuration :   ^</br^>   >> %rappconf% 
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_lin_cc.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_lin_cc.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -4544,12 +4548,12 @@ del %ES%\%insee%_erreurs_structure_info_lin_cc.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_LIN_%insee%_038 :
+echo *N_INFO_LIN_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%  
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -4560,15 +4564,15 @@ pause
 rem ===============================================================================================================================================================
 rem 3.7.0bis TEST INFO_PCT : (CC)
 rem ===============================================================================================================================================================
-: IPCTbis
+:IPCTbis
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
-echo **N_INFO_PCT_%insee%_038 :********************************************************>> %rappconf%
+echo *N_INFO_PCT_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.7 Contr√¥le de la couche N_INFO_PCT_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListeInf_%insee%.txt ^| find /i "PCT"') do (
 set IPnom=%%~ns
 )
@@ -4599,7 +4603,7 @@ goto IPbis1
 goto IPbis2
 )
 :IPbis1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis 
 :IPbis2
@@ -4609,7 +4613,7 @@ goto IPbis3
 goto IPbis4
 )
 :IPbis3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis
 :IPbis4
@@ -4619,17 +4623,17 @@ goto IPbis5
 goto IPbis6
 )
 :IPbis5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis 
 :IPbis6
-IF EXIST "%dg%\N_INFO_PCT_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_INFO_PCT_%insee%_%dep%.shp" ( 
 goto IPbis7
 ) else (
 goto IPbis8
 )
 :IPbis7
-	echo CONFORME -La couche N_INFO_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis
 :IPbis8
@@ -4639,17 +4643,17 @@ goto IPbis9
 goto IPbis10
 )
 :IPbis9
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis 
 :IPbis10
-IF EXIST "%dg%\N_INFO_PCT_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_INFO_PCT_%insee%_%dep%.tab" ( 
 goto IPbis11
 ) else (
 goto IPbis12
 )
 :IPbis11
-	echo CONFORME -La couche N_INFO_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis
 :IPbis12
@@ -4659,17 +4663,17 @@ goto IPbis13
 goto IPbis14
 )
 :IPbis13
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis	
 :IPbis14
-IF EXIST "%dg%\N_INFO_PCT_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_INFO_PCT_%insee%_%dep%.mif" ( 
 goto IPbis15
 ) else (
 goto IPbis16
 )
 :IPbis15
-	echo CONFORME -La couche N_INFO_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_INFO_PCT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis
 :IPbis16
@@ -4679,11 +4683,11 @@ goto IPbis17
 goto NOIPbis
 )
 :IPbis17
-	echo ---ERREURdg -La couche est ‡ renommer : N_INFO_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_INFO_PCT_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenIPbis 
 :NOIPbis
-	echo ----La couche N_INFO_PCT_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_INFO_PCT_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto HSURF
@@ -4692,22 +4696,22 @@ goto NOIPbis
 rem ===============================================================================================================================================================
 rem 3.7.2bis CONTROLE PROJECTION et ENCODAGE INFO_PCT :
 rem ===============================================================================================================================================================
-: OpenIPbis
+:OpenIPbis
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
+echo *N_INFO_PCT_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpIP= "La couche %IP% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
+echo *N_INFO_PCT_%insee%_%dep% :
 
 IF "%OpIP%"=="o" (goto OIPbis) else goto StructureIPbis
 
-: OIPbis
+:OIPbis
 rem ouverture de la couche IP dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%IP%"
@@ -4718,22 +4722,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvIP="La couche %IP% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvIP%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ7bis="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ7bis%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO7bis="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO7bis%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem7bis="Remarque(s) : "
  IF NOT "%Rem7bis%"=="" (
- echo -----**REMARQUES : "%Rem7bis%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem7bis%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -4746,7 +4750,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECIPION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln info_pct "%dg%\%IP%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln info_pct "%dg%\%IP%"
 echo.
 echo ...fin
 echo.
@@ -4754,19 +4758,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_7bis_controle_structure_ip_cc.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_info_pct_cc dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_ip_cc) to STDOUT" > %ES%\%insee%_erreurs_structure_info_pct_cc.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_info_pct_cc.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_pct_cc.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_info_pct_cc.txt ^|find /i /c "ERREUR"`) do (
 set structureIPCC=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE8bis pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE8bis pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -4779,25 +4783,28 @@ IF %structureIPCC%==0 (goto StructureIPokCC) else goto StructureIPnokCC
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
+echo *N_INFO_PCT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureIPCC% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo -RAPPEL COVADIS : La couche N_INFO_PCT_%insee%_038 comporte 7 champs :>> %rappconf%  
-echo         LIBELLE (varchar 254)/TXT (varchar 10)/TYPEI (varchar 2)/TYPEP (varchar 2)>> %rappconf% 
-echo         NOMFIC (varchar 80)/URLFIC (varchar 254)/INSEE (varchar 5)>> %rappconf%
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf%  
+echo ^<font color="blue"^>^<blockquote^>RAPPEL COVADIS : La couche N_INFO_PCT_%insee%_%dep% comporte 7 champs :  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>LIBELLE (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 10)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEI (varchar 2)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEP (varchar 2)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMFIC (varchar 80)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLFIC (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5) ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureIPCC% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureIPCC% erreur(s) de structuration :   ^</br^>   >> %rappconf% 
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_pct_cc.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_info_pct_cc.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -4810,12 +4817,12 @@ del %ES%\%insee%_erreurs_structure_info_pct_cc.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_INFO_PCT_%insee%_038 :
+echo *N_INFO_PCT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%  
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -4825,18 +4832,18 @@ rem ============================================================================
 
 
 rem ===============================================================================================================================================================
-rem 3.8.0 TEST HABILLAGE_SURF:
+rem 3.8.0 TEST HABILLAGE_SURF
 rem ===============================================================================================================================================================
-: HSURF
+:HSURF
 del ListeInf_%insee%.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_SURF_%insee%_038 :
-echo **N_HABILLAGE_SURF_%insee%_038 :**************************************************>> %rappconf%
+echo *N_HABILLAGE_SURF_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.8 Contr√¥le de la couche N_HABILLAGE_SURF_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%r in ('type ListeDG_%insee%.txt ^| find /i "HAB"') do (
 echo %%r >> ListeHab_%insee%.txt
 move "%%r" "%dg%"
@@ -4872,7 +4879,7 @@ goto HS1
 goto HS2
 )
 :HS1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS 
 :HS2
@@ -4882,7 +4889,7 @@ goto HS3
 goto HS4
 )
 :HS3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS
 :HS4
@@ -4892,17 +4899,17 @@ goto HS5
 goto HS6
 )
 :HS5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS 
 :HS6
-IF EXIST "%dg%\N_HABILLAGE_SURF_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_HABILLAGE_SURF_%insee%_%dep%.shp" ( 
 goto HS7
 ) else (
 goto HS8
 )
 :HS7
-	echo CONFORME -La couche N_HABILLAGE_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS
 :HS8
@@ -4912,17 +4919,17 @@ goto HS9
 goto HS10
 )
 :HS9
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_HABILLAGE_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS 
 :HS10
-IF EXIST "%dg%\N_HABILLAGE_SURF_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_HABILLAGE_SURF_%insee%_%dep%.tab" ( 
 goto HS11
 ) else (
 goto HS12
 )
 :HS11
-	echo CONFORME -La couche N_HABILLAGE_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS
 :HS12
@@ -4932,17 +4939,17 @@ goto HS13
 goto HS14
 )
 :HS13
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_HABILLAGE_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS	
 :HS14
-IF EXIST "%dg%\N_HABILLAGE_SURF_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_HABILLAGE_SURF_%insee%_%dep%.mif" ( 
 goto HS15
 ) else (
 goto HS16
 )
 :HS15
-	echo CONFORME -La couche N_HABILLAGE_SURF_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_SURF_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS
 :HS16
@@ -4952,11 +4959,11 @@ goto HS17
 goto NOHS
 )
 :HS17
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_SURF_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_HABILLAGE_SURF_%insee%_%dep%.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHS 
 :NOHS
-	echo ----La couche N_HABILLAGE_SURF_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche N_HABILLAGE_SURF_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto HLIN
@@ -4964,22 +4971,22 @@ goto NOHS
 rem ===============================================================================================================================================================
 rem 3.8.2 CONTROLE PROJECTION et ENCODAGE HABILLAGE_SURF :
 rem ===============================================================================================================================================================
-: OpenHS
+:OpenHS
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_SURF_%insee%_038 :
+echo *N_HABILLAGE_SURF_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpHS= "La couche %HS% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_SURF_%insee%_038 :
+echo *N_HABILLAGE_SURF_%insee%_%dep% :
 
 IF "%OpHS%"=="o" (goto OHS) else goto StructureHS
 
-: OHS
+:OHS
 rem ouverture de la couche HS dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%HS%"
@@ -4990,22 +4997,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvHS="La couche %HS% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvHS%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ8="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ8%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO8="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO8%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem8="Remarque(s) : "
  IF NOT "%Rem8%"=="" (
- echo -----**REMARQUES : "%Rem8%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem8%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -5018,7 +5025,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECHSION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln habillage_surf "%dg%\%HS%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln habillage_surf "%dg%\%HS%"
 echo.
 echo ...fin
 echo.
@@ -5026,19 +5033,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_8_controle_structure_hs.sql -q -t -h %host% -p %port% -U %user%
  
 rem export de la table erreur_structure_habillage_surf dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_hs) to STDOUT" > %ES%\%insee%_erreurs_structure_habillage_surf.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_habillage_surf.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_habillage_surf.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_habillage_surf.txt ^|find /i /c "ERREUR"`) do (
 set structureHS=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE9 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE9 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -5051,24 +5058,24 @@ IF %structureHS%==0 (goto StructureHSok) else goto StructureHSnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_SURF_%insee%_038 :
+echo *N_HABILLAGE_SURF_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureHS% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo -RAPPEL COVADIS : La couche N_HABILLAGE_SURF_%insee%_038 comporte 2 champs :>> %rappconf%  
-echo        NATTRAC (varchar 40)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>RAPPEL COVADIS : La couche N_HABILLAGE_SURF_%insee%_%dep% comporte 2 champs :  ^</font^>^</br^>   >> %rappconf%  
+echo ^<font color="blue"^>NATTRAC (varchar 40)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>   >> %rappconf%
+
 echo. >> %rappconf% 
-echo %structureHS% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>%structureHS% erreur(s) de structuration : ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_habillage_surf.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_habillage_surf.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -5081,14 +5088,15 @@ del %ES%\%insee%_erreurs_structure_habillage_surf.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_SURF_%insee%_038 :
+echo *N_HABILLAGE_SURF_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%     
 echo.>> %rappconf%            
 echo.>> %rappconf% 
+
 pause
 rem =============================================================================================================================================================
 
@@ -5098,15 +5106,15 @@ rem ============================================================================
 rem ===============================================================================================================================================================
 rem 3.9.0 TEST HABILLAGE_LIN :
 rem ===============================================================================================================================================================
-: HLIN
+:HLIN
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_LIN_%insee%_038 :
-echo **N_HABILLAGE_LIN_%insee%_038 :***************************************************>> %rappconf%
+echo *N_HABILLAGE_LIN_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.9 Contr√¥le de la couche N_HABILLAGE_LIN_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListeHab_%insee%.txt ^| find /i "LIN"') do (
 set HLnom=%%~ns
 )
@@ -5137,7 +5145,7 @@ goto HL1
 goto HL2
 )
 :HL1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL 
 :HL2
@@ -5147,7 +5155,7 @@ goto HL3
 goto HL4
 )
 :HL3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL
 :HL4
@@ -5157,17 +5165,17 @@ goto HL5
 goto HL6
 )
 :HL5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL 
 :HL6
-IF EXIST "%dg%\N_HABILLAGE_LIN_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_HABILLAGE_LIN_%insee%_%dep%.shp" ( 
 goto HL7
 ) else (
 goto HL8
 )
 :HL7
-	echo CONFORME -La couche N_HABILLAGE_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_LIN_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL
 :HL8
@@ -5177,17 +5185,17 @@ goto HL9
 goto HL10
 )
 :HL9
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche est √† renommer : N_HABILLAGE_LIN_%insee%_%dep%.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL 
 :HL10
-IF EXIST "%dg%\N_HABILLAGE_LIN_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_HABILLAGE_LIN_%insee%_%dep%.tab" ( 
 goto HL11
 ) else (
 goto HL12
 )
 :HL11
-	echo CONFORME -La couche N_HABILLAGE_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_LIN_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL
 :HL12
@@ -5197,17 +5205,17 @@ goto HL13
 goto HL14
 )
 :HL13
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche est √† renommer : N_HABILLAGE_LIN_%insee%_%dep%.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL	
 :HL14
-IF EXIST "%dg%\N_HABILLAGE_LIN_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_HABILLAGE_LIN_%insee%_%dep%.mif" ( 
 goto HL15
 ) else (
 goto HL16
 )
 :HL15
-	echo CONFORME -La couche N_HABILLAGE_LIN_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_LIN_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL
 :HL16
@@ -5217,11 +5225,12 @@ goto HL17
 goto NOHL
 )
 :HL17
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_LIN_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche est √† renommer : N_HABILLAGE_LIN_%insee%_%dep%.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHL 
 :NOHL
-	echo ----La couche N_HABILLAGE_LIN_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche N_HABILLAGE_LIN_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
+
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto HPCT
@@ -5229,22 +5238,22 @@ goto NOHL
 rem ===============================================================================================================================================================
 rem 3.9.2 CONTROLE PROJECTION et ENCODAGE HABILLAGE_LIN :
 rem ===============================================================================================================================================================
-: OpenHL
+:OpenHL
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_LIN_%insee%_038 :
+echo *N_HABILLAGE_LIN_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpHL= "La couche %HL% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_LIN_%insee%_038 :
+echo *N_HABILLAGE_LIN_%insee%_%dep% :
 
 IF "%OpHL%"=="o" (goto OHL) else goto StructureHL
 
-: OHL
+:OHL
 rem ouverture de la couche HL dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%HL%"
@@ -5255,22 +5264,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvHL="La couche %HL% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvHL%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ9="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ9%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO9="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO9%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem9="Remarque(s) : "
  IF NOT "%Rem9%"=="" (
- echo -----**REMARQUES : "%Rem9bis%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem9%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -5283,7 +5292,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECHLION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln habillage_lin "%dg%\%HL%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln habillage_lin "%dg%\%HL%"
 echo.
 echo ...fin
 echo.
@@ -5291,19 +5300,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_9_controle_structure_hl.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_habillage_lin dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_hl) to STDOUT" > %ES%\%insee%_erreurs_structure_habillage_lin.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_habillage_lin.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_habillage_lin.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_habillage_lin.txt ^|find /i /c "ERREUR"`) do (
 set structureHL=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE10 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE10 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -5316,24 +5325,23 @@ IF %structureHL%==0 (goto StructureHLok) else goto StructureHLnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_LIN_%insee%_038 :
+echo *N_HABILLAGE_LIN_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureHL% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo -RAPPEL COVADIS : La couche N_HABILLAGE_LIN_%insee%_038 comporte 2 champs :>> %rappconf%  
-echo        NATTRAC (varchar 40)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>RAPPEL COVADIS : La couche N_HABILLAGE_LIN_%insee%_%dep% comporte 2 champs :  ^</font^>^</br^>   >> %rappconf%  
+echo ^<font color="blue"^>NATTRAC (varchar 40)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureHL% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>%structureHL% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_habillage_lin.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_habillage_lin.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^>  %%d^</blockquote^>  ^</font^>^</br^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -5346,15 +5354,17 @@ del %ES%\%insee%_erreurs_structure_habillage_lin.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_LIN_%insee%_038 :
+echo *N_HABILLAGE_LIN_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%     
 echo.>> %rappconf%            
 echo.>> %rappconf% 
+set coucou1= "coucou1"
 pause
+set coucou2= "coucou2"
 rem =============================================================================================================================================================
 
 
@@ -5363,15 +5373,15 @@ rem ============================================================================
 rem ===============================================================================================================================================================
 rem 3.10.0 TEST HABILLAGE_PCT :
 rem ===============================================================================================================================================================
-: HPCT
+:HPCT
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_PCT_%insee%_038 :
-echo **N_HABILLAGE_PCT_%insee%_038 :***************************************************>> %rappconf%
+echo *N_HABILLAGE_PCT_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.10 Contr√¥le de la couche N_HABILLAGE_PCT_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListeHab_%insee%.txt ^| find /i "PCT"') do (
 set HPnom=%%~ns
 )
@@ -5395,6 +5405,7 @@ goto NOHP
 rem ===============================================================================================================================================================
 rem 3.10.1 CONTROLE NOMMAGE HABILLAGE_PCT: 
 rem ===============================================================================================================================================================
+
 :NomHP
 IF EXIST "%dg%\*HAB*PCT*CORRIGE*.shp" ( 
 goto HP1
@@ -5402,7 +5413,7 @@ goto HP1
 goto HP2
 )
 :HP1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP 
 :HP2
@@ -5412,7 +5423,7 @@ goto HP3
 goto HP4
 )
 :HP3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP
 :HP4
@@ -5422,17 +5433,17 @@ goto HP5
 goto HP6
 )
 :HP5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP 
 :HP6
-IF EXIST "%dg%\N_HABILLAGE_PCT_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_HABILLAGE_PCT_%insee%_%dep%.shp" ( 
 goto HP7
 ) else (
 goto HP8
 )
 :HP7
-	echo CONFORME -La couche N_HABILLAGE_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_PCT_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP
 :HP8
@@ -5442,17 +5453,17 @@ goto HP9
 goto HP10
 )
 :HP9
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche est √† renommer : N_HABILLAGE_PCT_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP 
 :HP10
-IF EXIST "%dg%\N_HABILLAGE_PCT_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_HABILLAGE_PCT_%insee%_%dep%.tab" ( 
 goto HP11
 ) else (
 goto HP12
 )
 :HP11
-	echo CONFORME -La couche N_HABILLAGE_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_PCT_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP
 :HP12
@@ -5462,17 +5473,17 @@ goto HP13
 goto HP14
 )
 :HP13
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_HABILLAGE_PCT_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP	
 :HP14
-IF EXIST "%dg%\N_HABILLAGE_PCT_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_HABILLAGE_PCT_%insee%_%dep%.mif" ( 
 goto HP15
 ) else (
 goto HP16
 )
 :HP15
-	echo CONFORME -La couche N_HABILLAGE_PCT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_PCT_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP
 :HP16
@@ -5482,11 +5493,12 @@ goto HP17
 goto NOHP
 )
 :HP17
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_PCT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_HABILLAGE_PCT_%insee%_%dep% a bien √©t√© livr√©e.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHP 
 :NOHP
-	echo ----La couche N_HABILLAGE_PCT_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_HABILLAGE_PCT_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
+
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto HTXT
@@ -5494,22 +5506,22 @@ goto NOHP
 rem ===============================================================================================================================================================
 rem 3.10.2 CONTROLE PROJECTION et ENCODAGE HABILLAGE_PCT :
 rem ===============================================================================================================================================================
-: OpenHP
+:OpenHP
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_PCT_%insee%_038 :
+echo *N_HABILLAGE_PCT_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpHP= "La couche %HP% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_PCT_%insee%_038 :
+echo *N_HABILLAGE_PCT_%insee%_%dep% :
 
 IF "%OpHP%"=="o" (goto OHP) else goto StructureHP
 
-: OHP
+:OHP
 rem ouverture de la couche HP dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%HP%"
@@ -5520,22 +5532,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvHP="La couche %HP% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvHP%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ10="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ10%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO10="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO10%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ. >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem10="Remarque(s) : "
  IF NOT "%Rem10%"=="" (
- echo -----**REMARQUES : "%Rem10%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem10%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -5548,7 +5560,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECHPION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln habillage_pct "%dg%\%HP%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln habillage_pct "%dg%\%HP%"
 echo.
 echo ...fin
 echo.
@@ -5556,19 +5568,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_10_controle_structure_hp.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_habillage_pct dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_hp) to STDOUT" > %ES%\%insee%_erreurs_structure_habillage_pct.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_habillage_pct.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_habillage_pct.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_habillage_pct.txt ^|find /i /c "ERREUR"`) do (
 set structureHP=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE11 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE11 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -5581,24 +5593,24 @@ IF %structureHP%==0 (goto StructureHPok) else goto StructureHPnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_PCT_%insee%_038 :
+echo *N_HABILLAGE_PCT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureHP% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo -RAPPEL COVADIS : La couche N_HABILLAGE_PCT_%insee%_038 comporte 2 champs :>> %rappconf%  
-echo        NATTRAC (varchar 40)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>RAPPEL COVADIS : La couche N_HABILLAGE_PCT_%insee%_%dep% comporte 2 champs :  ^</font^>^</br^>   >> %rappconf%  
+echo ^<font color="blue"^>NATTRAC (varchar 40)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>   >> %rappconf%
+
 echo. >> %rappconf% 
-echo %structureHP% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>%structureHP% erreur(s) de structuration :  ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_habillage_pct.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_habillage_pct.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^>  %%d^</blockquote^>  ^</font^> ^</br^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -5611,12 +5623,12 @@ del %ES%\%insee%_erreurs_structure_habillage_pct.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_PCT_%insee%_038 :
+echo *N_HABILLAGE_PCT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%    
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -5628,15 +5640,15 @@ rem ============================================================================
 rem ===============================================================================================================================================================
 rem 3.11.0 TEST HABILLAGE_TXT :
 rem ===============================================================================================================================================================
-: HTXT
+:HTXT
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_TXT_%insee%_038 :
-echo **N_HABILLAGE_TXT_%insee%_038 :***************************************************>> %rappconf%
+echo *N_HABILLAGE_TXT_%insee%_%dep% :
+echo ^<blockquote ^> ^<h3^>3.11 Contr√¥le de la couche N_HABILLAGE_TXT_%insee%_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
 
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListeHab_%insee%.txt ^| find /i "TXT"') do (
 set HTnom=%%~ns
 )
@@ -5667,7 +5679,7 @@ goto HT1
 goto HT2
 )
 :HT1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT 
 :HT2
@@ -5677,7 +5689,7 @@ goto HT3
 goto HT4
 )
 :HT3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT
 :HT4
@@ -5687,17 +5699,17 @@ goto HT5
 goto HT6
 )
 :HT5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT 
 :HT6
-IF EXIST "%dg%\N_HABILLAGE_TXT_%insee%_038.shp" ( 
+IF EXIST "%dg%\N_HABILLAGE_TXT_%insee%_%dep%.shp" ( 
 goto HT7
 ) else (
 goto HT8
 )
 :HT7
-	echo CONFORME -La couche N_HABILLAGE_TXT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_TXT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT
 :HT8
@@ -5707,17 +5719,17 @@ goto HT9
 goto HT10
 )
 :HT9
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_TXT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_HABILLAGE_TXT_%insee%_%dep%.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT 
 :HT10
-IF EXIST "%dg%\N_HABILLAGE_TXT_%insee%_038.tab" ( 
+IF EXIST "%dg%\N_HABILLAGE_TXT_%insee%_%dep%.tab" ( 
 goto HT11
 ) else (
 goto HT12
 )
 :HT11
-	echo CONFORME -La couche N_HABILLAGE_TXT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_TXT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT
 :HT12
@@ -5727,17 +5739,17 @@ goto HT13
 goto HT14
 )
 :HT13
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_TXT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_HABILLAGE_TXT_%insee%_%dep%.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT	
 :HT14
-IF EXIST "%dg%\N_HABILLAGE_TXT_%insee%_038.mif" ( 
+IF EXIST "%dg%\N_HABILLAGE_TXT_%insee%_%dep%.mif" ( 
 goto HT15
 ) else (
 goto HT16
 )
 :HT15
-	echo CONFORME -La couche N_HABILLAGE_TXT_%insee%_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_HABILLAGE_TXT_%insee%_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT
 :HT16
@@ -5747,11 +5759,12 @@ goto HT17
 goto NOHT
 )
 :HT17
-	echo ---ERREURdg -La couche est ‡ renommer : N_HABILLAGE_TXT_%insee%_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_HABILLAGE_TXT_%insee%_%dep%.^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenHT 
 :NOHT
-	echo ----La couche N_HABILLAGE_TXT_%insee%_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^> ERREUR : La couche N_HABILLAGE_TXT_%insee%_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
+
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto DOCU
@@ -5759,22 +5772,22 @@ goto NOHT
 rem ===============================================================================================================================================================
 rem 3.11.2 CONTROLE PROJECTION et ENCODAGE HABILLAGE_TXT :
 rem ===============================================================================================================================================================
-: OpenHT
+:OpenHT
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_TXT_%insee%_038 :
+echo *N_HABILLAGE_TXT_%insee%_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpHT= "La couche %HT% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_TXT_%insee%_038 :
+echo *N_HABILLAGE_TXT_%insee%_%dep% :
 
 IF "%OpHT%"=="o" (goto OHT) else goto StructureHT
 
-: OHT
+:OHT
 rem ouverture de la couche HT dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%HT%"
@@ -5785,22 +5798,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvHT="La couche %HT% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvHT%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ11="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ11%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO11="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO11%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem11="Remarque(s) : "
  IF NOT "%Rem11%"=="" (
- echo -----**REMARQUES : "%Rem11%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem11%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -5813,7 +5826,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECHTION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln habillage_txt "%dg%\%HT%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln habillage_txt "%dg%\%HT%"
 echo.
 echo ...fin
 echo.
@@ -5821,19 +5834,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_11_controle_structure_ht.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_habillage_txt dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_ht) to STDOUT" > %ES%\%insee%_erreurs_structure_habillage_txt.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_habillage_txt.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_habillage_txt.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_habillage_txt.txt ^|find /i /c "ERREUR"`) do (
 set structureHT=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE12 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE12 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -5846,24 +5859,24 @@ IF %structureHT%==0 (goto StructureHTok) else goto StructureHTnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_TXT_%insee%_038 :
+echo *N_HABILLAGE_TXT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureHT% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf%
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo -RAPPEL COVADIS : La couche N_HABILLAGE_TXT_%insee%_038 comporte 3 champs :>> %rappconf%  
-echo        NATTRAC (varchar 40)/TXT (varchar 80)/INSEE (varchar 5)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL COVADIS : La couche N_HABILLAGE_TXT_%insee%_%dep% comporte 3 champs :^</font^>^</br^>   >> %rappconf% 
+echo ^<font color="blue"^>NATTRAC (varchar 40)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TXT (varchar 80)^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INSEE (varchar 5)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureHT% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureHT% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_habillage_txt.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_habillage_txt.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
@@ -5876,12 +5889,12 @@ del %ES%\%insee%_erreurs_structure_habillage_txt.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_HABILLAGE_TXT_%insee%_038 :
+echo *N_HABILLAGE_TXT_%insee%_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%  
 echo.>> %rappconf%            
 echo.>> %rappconf% 
 pause
@@ -5893,15 +5906,15 @@ rem ============================================================================
 rem ===============================================================================================================================================================
 rem 3.12.0 TEST DOCUMENT_URBA :
 rem ===============================================================================================================================================================
-: DOCU
+:DOCU
 del ListeHab_%insee%.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_DOCUMENT_URBA_038 :
-echo **N_DOCUMENT_URBA_038 :*********************************************************>> %rappconf%
+echo *N_DOCUMENT_URBA_%dep% :
+echo ^<blockquote ^> ^<h3^>3.12 Contr√¥le de la couche N_DOCUMENT_URBA_%dep% ^</h3^>^</blockquote^>  >> %rappconf%
 echo. >> %rappconf%
-rem recherche du nom de la couche dans la liste des donnÈes gÈographiques et dÈplacement dans %dg%:
+rem recherche du nom de la couche dans la liste des donn√©es g√©ographiques et d√©placement dans %dg%:
 for /f %%s in ('type ListeDG_%insee%.txt ^| find /i "DOC"') do (
 set DOCUnom=%%~ns
 )
@@ -5932,7 +5945,7 @@ goto DOCU1
 goto DOCU2
 )
 :DOCU1
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU 
 :DOCU2
@@ -5942,7 +5955,7 @@ goto DOCU3
 goto DOCU4
 )
 :DOCU3
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf% 
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU
 :DOCU4
@@ -5952,17 +5965,17 @@ goto DOCU5
 goto DOCU6
 )
 :DOCU5
-	echo CONFORME -La couche testÈe est une version CORRIGEE (en interne).>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche test√©e est une version CORRIGEE (en interne).  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU 
 :DOCU6
-IF EXIST "%dg%\N_DOCUMENT_URBA_038.shp" ( 
+IF EXIST "%dg%\N_DOCUMENT_URBA_%dep%.shp" ( 
 goto DOCU7
 ) else (
 goto DOCU8
 )
 :DOCU7
-	echo CONFORME -La couche N_DOCUMENT_URBA_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_DOCUMENT_URBA_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU
 :DOCU8
@@ -5972,17 +5985,17 @@ goto DOCU9
 goto DOCU10
 )
 :DOCU9
-	echo ---ERREURdg -La couche est ‡ renommer : N_DOCUMENT_URBA_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_DOCUMENT_URBA_%dep%  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU 
 :DOCU10
-IF EXIST "%dg%\N_DOCUMENT_URBA_038.tab" ( 
+IF EXIST "%dg%\N_DOCUMENT_URBA_%dep%.tab" ( 
 goto DOCU11
 ) else (
 goto DOCU12
 )
 :DOCU11
-	echo CONFORME -La couche N_DOCUMENT_URBA_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_DOCUMENT_URBA_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU
 :DOCU12
@@ -5992,17 +6005,17 @@ goto DOCU13
 goto DOCU14
 )
 :DOCU13
-	echo ---ERREURdg -La couche est ‡ renommer : N_DOCUMENT_URBA_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_DOCUMENT_URBA_%dep%  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU	
 :DOCU14
-IF EXIST "%dg%\N_DOCUMENT_URBA_038.mif" ( 
+IF EXIST "%dg%\N_DOCUMENT_URBA_%dep%.mif" ( 
 goto DOCU15
 ) else (
 goto DOCU16
 )
 :DOCU15
-	echo CONFORME -La couche N_DOCUMENT_URBA_038 a bien ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="green"^>CONFORME : La couche N_DOCUMENT_URBA_%dep% a bien √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU
 :DOCU16
@@ -6012,11 +6025,11 @@ goto DOCU17
 goto NODOCU
 )
 :DOCU17
-	echo ---ERREURdg -La couche est ‡ renommer : N_DOCUMENT_URBA_038.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche est √† renommer : N_DOCUMENT_URBA_%dep%  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	goto OpenDOCU 
 :NODOCU
-	echo ----La couche N_DOCUMENT_URBA_038 n'a pas ÈtÈ livrÈe.>> %rappconf%
+	echo ^<font color="red"^>ERREUR : La couche N_DOCUMENT_URBA_%dep% n'a pas √©t√© livr√©e.  ^</font^>^</br^>   >> %rappconf%
 	echo. >> %rappconf%
 	echo. >> %rappconf%
 	goto FinDOCU
@@ -6024,22 +6037,22 @@ goto NODOCU
 rem ===============================================================================================================================================================
 rem 3.12.2 CONTROLE PROJECTION et ENCODAGE DOCUMENT_URBA :
 rem ===============================================================================================================================================================
-: OpenDOCU
+:OpenDOCU
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_DOCUMENT_URBA_038 :
+echo *N_DOCUMENT_URBA_%dep% :
 echo.
-rem ouvrir si couche dÈtectÈ :
+rem ouvrir si couche d√©tect√© :
 set /p OpDOCU= "La couche %DOCU% a ete livre. Voulez-vous l'ouvrir ? (o/n): "
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_DOCUMENT_URBA_038 :
+echo *N_DOCUMENT_URBA_%dep% :
 
 IF "%OpDOCU%"=="o" (goto ODOCU) else goto StructureDOCU
 
-: ODOCU
+:ODOCU
 rem ouverture de la couche DOCU dans Qgis pr verif PROJECTION et ENCODAGE :
 rem --------------------------------------------------------------------------------------------
 "%dg%\%DOCU%"
@@ -6050,22 +6063,22 @@ echo.
 rem notification des remarques PROJECTION et ENCODAGE:
  set /p OuvDOCU="La couche %DOCU% s'ouvre-t-elle ? (o/n) : "
  IF "%OuvDOCU%"=="n" ( 
- echo -----**ERREURdg-La couche ne s'ouvre pas.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : La couche ne s'ouvre pas.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  ) 
  set /p PROJ12="PROJECTION RGF 93 ? (o/n) : "
  IF "%PROJ12%"=="n" ( 
- echo -----**ERREURdg-PROJECTION NON-CONFORME : dÈfinir en RGF Lambert 95, EPSG : 2154.  >> %rappconf% 
+echo ^<font color="red"^>ERREUR : Projection non conforme : d√©finir en RGF Lambert 93, EPSG : 2154.   ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p ENCO12="ENCODAGE UTF 8 ? (o/n) : " 
  IF "%ENCO12%"=="n" (
- echo -----**ERREURdg-L'encodage en UTF-8 est fortement conseillÈ.  >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : L'encodage en UTF-8 est fortement conseill√©.  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  set /p Rem12="Remarque(s) : "
  IF NOT "%Rem12%"=="" (
- echo -----**REMARQUES : "%Rem12%" >> %rappconf% 
+echo ^<font color="blue"^>REMARQUE : "%Rem12%" >>  ^</font^>^</br^>   >> %rappconf%
  echo.  >> %rappconf%
  )
  
@@ -6078,7 +6091,7 @@ rem -------------------------------------------------
 echo.
 echo IMPORT de la couche...
 SET PGCLIENTENCODING=LATIN1
-%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECDOCUION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln document_urba "%dg%\%DOCU%"
+%OGR% --config PGCLIENTENCODING LATIN1 -lco PRECISION=NO -f "PostgreSQL" PG:"host=%host% user=%user% dbname=%base% password=%pass% active_schema=public" -s_srs EPSG:2154 -t_srs EPSG:2154 -lco GEOMETRY_NAME=the_geom -nlt geometry -overwrite -nln document_urba "%dg%\%DOCU%"
 echo.
 echo ...fin
 echo.
@@ -6086,19 +6099,19 @@ rem pause
 
 echo * Controle de structuration de la table...
 echo.
-rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs ‡ supprimer ou renommer):
+rem creation de la table d'erreurs de structure (champs manquants, types invalides, champs √† supprimer ou renommer):
 %PSQL% -d %base% -f %SQL%\5_12_controle_structure_docu.sql -q -t -h %host% -p %port% -U %user% 
 
 rem export de la table erreur_structure_document_urba dans le dossiers PG_DATA en TXT :
 %PSQL% -U %user% -d %base% -c "copy (Select * from erreurs_champs_docu) to STDOUT" > %ES%\%insee%_erreurs_structure_document_urba.txt
 
 rem decompte des lignes erreurs dans erreurs_structure_document_urba.txt :
-for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_document_urba.txt ^|find /i /c "ERREURdg"`) do (
+for /F "usebackq" %%u in (`type %ES%\%insee%_erreurs_structure_document_urba.txt ^|find /i /c "ERREUR"`) do (
 set structureDOCU=%%u
 )
 
 rem =============================================================================================================================================================
-rem PAUSE13 pour voir le traitement structure (ajouter/supprimer "rem" pour dÈsactiver/activer)
+rem PAUSE13 pour voir le traitement structure (ajouter/supprimer "rem" pour d√©sactiver/activer)
 rem =============================================================================================================================================================
 echo.
 echo fin du traitement!
@@ -6111,32 +6124,41 @@ IF %structureDOCU%==0 (goto StructureDOCUok) else goto StructureDOCUnok
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_DOCUMENT_URBA_038 :
+echo *N_DOCUMENT_URBA_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE NON CONFORME*
 echo %structureDOCU% erreurs.
 
-echo -----**STRUCTURATION NON-CONFORME : >> %rappconf%
+echo ^<font color="red"^>ERREUR : STRUCTURATION NON-CONFORME :   ^</font^>^</br^>   >> %rappconf%
 echo. >> %rappconf% 
-echo -RAPPEL COVADIS : La couche N_DOCUMENT_URBA_038 comporte 16 champs :>> %rappconf%  
-echo        IDURBA (varchar 20)/IDURBAPREC (varchar 20)/TYPEDOC (varchar 3)/>> %rappconf% 
-echo        ETAT (varchar 2)/VERSION (varchar 20)/DATAPPRO (date)/DATVALID (date)/>> %rappconf% 
-echo        INTERCO (varchar 1)/SIREN (varchar 9)/NOMREG (varchar 80)/>> %rappconf% 
-echo        URLREG (varchar 254)/NOMPLAN (varchar 80)/URLPLAN (varchar 254)>> %rappconf% 
-echo        SITEWEB (varchar 254)/NOMREF (varchar 254)/DATEREF (date)>> %rappconf% 
-echo -ATTENTION : Le champ "ID_MAP (integer)" a ÈtÈ ajoutÈ au standard par le MEDDE.>> %rappconf%
-echo              Son abscence n'est pas un critËre de non-conformitÈ. >> %rappconf% 
+echo ^<font color="blue"^>^<blockquote^>RAPPEL COVADIS : La couche N_DOCUMENT_URBA_%dep% comporte 16 champs :  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>IDURBA (varchar 20)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>IDURBAPREC (varchar 20)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>TYPEDOC (varchar 3)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>ETAT (varchar 2)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>VERSION (varchar 20)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATAPPRO (date)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATVALID (date)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>INTERCO (varchar 1)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>SIREN (varchar 9)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMREG (varchar 80)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLREG (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMPLAN (varchar 80)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>URLPLAN (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>SITEWEB (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>NOMREF (varchar 254)  ^</font^>^</br^>   >> %rappconf%
+echo ^<font color="blue"^>DATEREF (date)  ^</font^>^</br^>^</blockquote^>   >> %rappconf%
 echo. >> %rappconf% 
-echo %structureDOCU% erreurs de structuration : >> %rappconf% 
+echo ^<font color="red"^>ERREUR : %structureDOCU% erreur(s) de structuration :   ^</br^>   >> %rappconf%
 rem liste des erreurs dans rapport :
-for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_document_urba.txt ^|find /i "ERREURdg"') do (
-echo    %%d >> %rappconf%
+for /F "delims=" %%d in ('type %ES%\%insee%_erreurs_structure_document_urba.txt ^|find /i "ERREUR"') do (
+echo ^<blockquote^> %%d^</blockquote^> ^</br^>^</font^>   >> %rappconf%
 )
 echo.>> %rappconf%
 echo.>> %rappconf% 
-echo.
+echo. 
 pause
 goto FinDOCU
 
@@ -6145,15 +6167,15 @@ del %ES%\%insee%_erreurs_structure_document_urba.txt
 cls
 echo Controle des donnees geographiques...
 echo.
-echo *N_DOCUMENT_URBA_038 :
+echo *N_DOCUMENT_URBA_%dep% :
 echo Controle de structuration de la table...
 echo         ...fin du controle de la structure.
 echo ------------------------------------
 echo *STRUCTURE CONFORME*
-echo -----**STRUCTURATION DE LA TABLE CONFORME.>> %rappconf% 
+echo ^<font color="green"^>CONFORME : STRUCTURATION DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%  
 echo.>> %rappconf%            
 echo.>> %rappconf% 
-: FinDOCU
+:FinDOCU
 cls
 echo Controle des donnees geographiques...
 rem =============================================================================================================================================================
@@ -6162,32 +6184,32 @@ rem ============================================================================
 
 
 rem ===============================================================================================================================================================
-rem BILAN controle donnÈes gÈo 
+rem BILAN controle donn√©es g√©o 
 rem ===============================================================================================================================================================
-: BilanDG
+:BilanDG
 
-for /F "usebackq" %%o in (`type %rappconf% ^|find /c "ERREURdg"`) do (
+for /F "usebackq" %%o in (`type %rappconf% ^|find /c "ERREUR"`) do (
 set dge=%%o
 )
 echo.
 echo %dge% Erreur(s)
 IF %dge%==0 goto dga
 IF not %dge%==0 goto dgb
-: dga
+:dga
 echo --------------------------------------------------------------------------------
-echo                                                 ********************************>> %rappconf%
-echo                                                  DONNEES GEOGRAPHIQUE : CONFORME>> %rappconf%
-echo                                                 ********************************>> %rappconf%
+
+echo ^<font color="green"^>CONFORME : DONNEES GEOGRAPHIQUES DE LA TABLE CONFORME.   ^</font^>^</br^>   >> %rappconf%  
+
 echo *DONNEES GEOGRAPHIQUES : CONFORME*
 goto dgc
-: dgb
+:dgb
 echo --------------------------------------------------------------------------------
-echo                                            *************************************>> %rappconf%
-echo                                             DONNEES GEOGRAPHIQUES : NON CONFORME>> %rappconf%
-echo                                                                     %dge% Erreur(s)>> %rappconf%
-echo                                            *************************************>> %rappconf%
+echo. >> %rappconf%
+echo ^<font color="red"^>ERREUR : DONNEES GEOGRAPHIQUES DE LA TABLE NON CONFORME.   ^</font^>^</br^>   >> %rappconf%  
+echo ^<font color="red"^>ERREUR : %dge% erreurs de donn√©es :   ^</font^>^</br^>   >> %rappconf%
+echo. >> %rappconf%
 echo *DONNEES GEOGRAPHIQUES : NON CONFORME*
-: dgc
+:dgc
 echo. >> %rappconf%
 echo.
 echo ...fin
@@ -6227,10 +6249,12 @@ echo ** %dge% Erreurs sur les donnees geographiques
 rem ===============================================================================================================================================================
 rem OUVERTURE DU RRAPPORT ET DES DONNEES : 
 rem ===============================================================================================================================================================
-: rapp
+:rapp
 echo.
 echo.
 rem ouverture du rapport :
+echo ^</body^> >> %rappconf%
+echo ^</html^> >> %rappconf%
 "%cd%\%rappconf%"  
 
 rem ouverture du dossier et de toutes les couches :
@@ -6249,8 +6273,8 @@ echo.  >> %rappconf%
  echo.
 pause
 
-rem ‡ voir pour ++++++ :
+rem √† voir pour ++++++ :
 rem format edigeo
 rem modif controle nommage pdf
-rem interpretation/contraintes/requÍte sur les valeurs des champs
-rem si plusieurs couches nommÈes avec mÍme mot clÈ
+rem interpretation/contraintes/requ√™te sur les valeurs des champs
+rem si plusieurs couches nomm√©es avec m√™me mot cl√©
