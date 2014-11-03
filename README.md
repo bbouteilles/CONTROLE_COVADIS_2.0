@@ -159,7 +159,7 @@ Script de contrôle des livraisons des documents d'urbanisme numérisés au stan
 	BILAN controle données géo
 -------------------------------------------------------------------------------	
 
-BILAN GENERALE 						
+BILAN GENERAL						
 -------------------------------------------------------------------------------	
 
 OUVERTURE DU RAPPORT ET DES DONNEES  						
