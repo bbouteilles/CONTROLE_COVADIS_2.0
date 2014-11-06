@@ -3869,7 +3869,8 @@ rem ----------------------------------------------------------------------------
  "%ET%\%insee%_decalages_section.shp"
  ) else (
  del "%ET%\%insee%_decalages_section.dbf"
- goto PAUSE
+ goto FinTopoSCC
+ PAUSE
  )
  echo.
  echo.
